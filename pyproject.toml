@@ -5,9 +5,11 @@ description = ""
 authors = ["Adeonita <adeonita.sousa@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 fastapi = "^0.115.0"
 uvicorn = {extras = ["standard"], version = "^0.30.6"}
+bio = "^1.7.1"
+python-dotenv = "^1.0.1"
 
 
 [build-system]
