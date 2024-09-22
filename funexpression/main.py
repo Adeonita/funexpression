@@ -1,6 +1,9 @@
+from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI
 from application.interfaces.expression_request_payload import ExpressionCalculateRequest
-from infraestructure.clients.genbank_service import download_fasta_sequence_by_id
+from infrastructure.clients.genbank_service import download_fasta_sequence_by_id
+
+load_dotenv('../.env')
 
 app = FastAPI()
 router = APIRouter()
