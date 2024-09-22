@@ -1,0 +1,10 @@
+services: 
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    ports:
+      - "80:80"
+    volumes:
+      - ./funexpression:/funexpression
