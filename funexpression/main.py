@@ -6,7 +6,7 @@ app = FastAPI()
 router = APIRouter()
 
 @router.post("/expression/calculate/")
-def create_item(request: ExpressionCalculateRequest):
+def expression_calculate(request: ExpressionCalculateRequest):
     gene_id = request.reference_genome_acession_number
     genome = download_fasta_sequence_by_id(gene_id)
     return request
