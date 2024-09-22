@@ -1,5 +1,5 @@
-import gzip
 import os
+import gzip
 import shutil
 import urllib.request
 from ftplib import FTP
