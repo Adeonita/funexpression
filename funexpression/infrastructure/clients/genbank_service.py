@@ -87,7 +87,7 @@ class GenBankService:
                 raise ValueError(
                     'No FTP path found for the given accession number.'
                 )
-        
+
         return ftp_url
 
     def download_fasta_sequence_by_id(self, acession_number: str):
