@@ -1,9 +1,9 @@
 from pydantic import BaseModel
 
 class Triplicate(BaseModel):
-    acession_number_1: str
-    acession_number_2: str
-    acession_number_3: str
+    srr_acession_number_1: str
+    srr_acession_number_2: str
+    srr_acession_number_3: str
 
 
 class ExpressionCalculateRequest(BaseModel):
