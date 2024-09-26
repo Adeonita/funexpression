@@ -2,7 +2,7 @@ import os
 import subprocess
 
 class GEOService():
-    def _create_folder_if_not_exist(self, acession_number:str, directory_name: str):
+    def _create_folder_if_not_exist(self, directory_name: str, acession_number:str):
             temp_transcriptome = os.path.join(
                 os.getcwd(), directory_name, f'results_{acession_number}'
             )
@@ -18,7 +18,6 @@ class GEOService():
 
         for sra_id in sra_numbers:
             print ("Generating fastq for: " + sra_id)
-            fastq_dump=  f"fastq-dump --split-files --outdir {self._create_folder_if_not_exist(sra_id)} {sra_id}"
-            # fastq_dump = "fastq-dump --outdir fastq --gzip --skip-technical  --readids --read-filter pass --dumpbase --split-3 --clip ~/ncbi/public/sra/" + sra_id + ".sra"
+            fastq_dump=  f"fastq-dump --split-files --outdir {self._create_folder_if_not_exist('transcriptome', sra_id)} {sra_id}"
             print ("The command used was: " + fastq_dump)
             subprocess.call(fastq_dump, shell=True)
