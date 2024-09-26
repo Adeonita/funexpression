@@ -9,7 +9,7 @@ ENV POETRY_NO_INTERACTION=1 \
 
 WORKDIR /app
 
-#instala sra toolkit
+#install sra toolkit
 RUN wget http://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.1.1/sratoolkit.3.1.1-ubuntu64.tar.gz
 RUN tar -xvf sratoolkit.3.1.1-ubuntu64.tar.gz
 RUN mv sratoolkit.3.1.1-ubuntu64 sratoolkit
