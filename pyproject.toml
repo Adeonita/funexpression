@@ -10,7 +10,6 @@ fastapi = "^0.115.0"
 uvicorn = {extras = ["standard"], version = "^0.30.6"}
 bio = "^1.7.1"
 python-dotenv = "^1.0.1"
-xmltodict = "^0.13.0"
 
 
 [build-system]
