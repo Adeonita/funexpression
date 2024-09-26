@@ -9,6 +9,11 @@ ENV POETRY_NO_INTERACTION=1 \
 
 WORKDIR /app
 
+#install sra toolkit
+RUN wget http://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.1.1/sratoolkit.3.1.1-ubuntu64.tar.gz
+RUN tar -xvf sratoolkit.3.1.1-ubuntu64.tar.gz
+RUN mv sratoolkit.3.1.1-ubuntu64 sratoolkit
+
 COPY pyproject.toml poetry.lock ./
 
 RUN poetry install --no-dev --no-root && rm -rf $POETRY_CACHE_DIR
@@ -17,9 +22,10 @@ RUN poetry install --no-dev --no-root && rm -rf $POETRY_CACHE_DIR
 FROM python:3.11-slim-buster AS runtime
 
 ENV VIRTUAL_ENV=/app/.venv \
-    PATH="/app/.venv/bin:$PATH"
+    SRATOOLKIT=/app/sratoolkit \
+    PATH="/app/.venv/bin:/app/sratoolkit/bin:$PATH"
 
-COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+COPY --from=builder ${SRATOOLKIT} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 COPY funexpression ./funexpression
 
