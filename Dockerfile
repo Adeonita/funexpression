@@ -22,13 +22,29 @@ RUN poetry install --no-dev --no-root && rm -rf $POETRY_CACHE_DIR
 FROM python:3.11-slim-buster AS runtime
 
 ENV VIRTUAL_ENV=/app/.venv \
-    SRATOOLKIT=/app/sratoolkit \
-    PATH="/app/.venv/bin:/app/sratoolkit/bin:$PATH"
+    PATH="/app/.venv/bin:/app:${PATH}}"
 
-COPY --from=builder ${SRATOOLKIT} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 COPY funexpression ./funexpression
 
 WORKDIR /funexpression
 
+
 ENTRYPOINT ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--reload"]
+
+
+# the image is used to run worker
+FROM python:3.11-slim-buster AS worker
+
+ENV VIRTUAL_ENV=/app/.venv \
+    SRATOOLKIT=/app/sratoolkit \
+    PATH="/app/.venv/bin:/app/sratoolkit/bin:$PATH"
+
+WORKDIR /funexpression
+
+COPY --from=builder ${SRATOOLKIT} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+
+COPY . /funexpression
+
+ENTRYPOINT ["celery", "-A", "infrastructure.clients.geo_service", "worker", "-l", "info", "--pool=threads"]
