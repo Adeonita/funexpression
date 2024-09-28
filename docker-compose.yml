@@ -1,5 +1,6 @@
 services: 
   web:
+    container_name: funexpression
     platform: linux/amd64
     build:
       context: .
@@ -7,7 +8,42 @@ services:
       target: runtime
     ports:
       - "80:80"
+    depends_on:
+      - rabbitmq
+    networks:
+      - backend
     volumes:
       - ./funexpression:/funexpression
     env_file:
       .env
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    hostname: "rabbitmq"
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=pass
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - backend
+  worker:
+    platform: linux/amd64
+    container_name: worker
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    depends_on:
+      - web
+    volumes:
+      - ./funexpression:/funexpression
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=pass
+    networks:
+      - backend
+networks:
+    backend:
+      driver: bridge
