@@ -48,3 +48,4 @@ COPY --from=builder ${SRATOOLKIT} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 COPY . /funexpression
 
 ENTRYPOINT ["celery", "-A", "infrastructure.clients.geo_service", "worker", "-l", "info", "--pool=threads"]
+# ENTRYPOINT ["celery", "-A", "tasks.geo_task", "worker", "-l", "info", "--pool=threads"]

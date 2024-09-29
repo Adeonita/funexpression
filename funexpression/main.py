@@ -4,8 +4,11 @@ from aplication.helpers.helper import get_srr_list, get_user_name_by_email
 from aplication.interfaces.expression_request_payload import ExpressionCalculateRequest
 # from infrastructure.clients.genbank_service import GenBankService
 # from infrastructure.clients.geo_service import GEOService
-from infrastructure.clients.geo_service import get_fasta_sequence
+# from tasks.geo_task import get_fasta_sequence
+
 import uuid
+
+from infrastructure.clients.geo_service import get_fasta_sequence
 
 load_dotenv('../.env')
 
@@ -22,7 +25,7 @@ def expression_calculate(request: ExpressionCalculateRequest):
 
     for c_transcriptome, e_transcriptome in zip(control_transcriptomes, experiment_transcriptomes):
         get_fasta_sequence.delay(run_id, 'transcriptome_control', c_transcriptome)
-        # get_fasta_sequence(run_id, 'transcriptome_experiment', e_transcriptome)
+        get_fasta_sequence(run_id, 'transcriptome_experiment', e_transcriptome)
 
     # GenBankService().download_fasta_sequence_by_id(gene_id)
     return control_transcriptomes
