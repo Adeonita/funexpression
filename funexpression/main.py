@@ -3,12 +3,9 @@ from fastapi import APIRouter, FastAPI
 from aplication.helpers.helper import get_srr_list, get_user_name_by_email
 from aplication.interfaces.expression_request_payload import ExpressionCalculateRequest
 # from infrastructure.clients.genbank_service import GenBankService
-# from infrastructure.clients.geo_service import GEOService
-# from tasks.geo_task import get_fasta_sequence
+from tasks.geo_task import get_fasta_sequence
 
 import uuid
-
-from infrastructure.clients.geo_service import get_fasta_sequence
 
 load_dotenv('../.env')
 
