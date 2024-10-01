@@ -11,6 +11,7 @@ uvicorn = {extras = ["standard"], version = "^0.30.6"}
 bio = "^1.7.1"
 python-dotenv = "^1.0.1"
 celery = {extras = ["rabbitmq"], version = "^5.4.0"}
+pysondb = "^1.6.7"
 
 
 [build-system]
