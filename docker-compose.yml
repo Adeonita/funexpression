@@ -28,13 +28,13 @@ services:
       - "15672:15672"
     networks:
       - backend
-  worker_geo_control:
+  download_worker:
     platform: linux/amd64
-    container_name: worker_geo_control
+    container_name: download_worker
     build:
       context: .
       dockerfile: Dockerfile
-      target: worker_geo_organisnm_control
+      target: download_worker
     depends_on:
       - web
     volumes:
