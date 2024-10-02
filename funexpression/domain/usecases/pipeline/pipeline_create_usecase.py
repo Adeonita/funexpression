@@ -17,6 +17,25 @@ class PipelineCreateUseCase:
         self.task = task
 
     def execute(self, input: PipelineCreateUseCaseInput):
+        created_pipeline = self._find_pipeline(input)
+
+        if created_pipeline:
+            created_pipeline = Pipeline.from_json(created_pipeline)
+            if (
+                created_pipeline.stage == PipelineStageEnum.PENDING
+                and self.pipeline_repository.is_all_file_download_completed(
+                    created_pipeline.id
+                )
+            ):
+                self.pipeline_repository.update_status(
+                    created_pipeline.id, PipelineStageEnum.DOWNLOADED
+                )
+                # dispara o usecase de conversão via task
+            print(
+                f"Pipeline already exist with stage:  {created_pipeline.stage.value}"
+            )  # retorna alguma coisa pro usuário avisando
+            return
+
         experiment_organism = Triplicate(
             srr_1=SRAFile(
                 acession_number=input.experiment_organism.srr_acession_number_1,
@@ -68,5 +87,24 @@ class PipelineCreateUseCase:
 
     def _download_sra(self, sra_file: SRAFile, pipeline_id: str):
         self.task.sra_transcriptome_download.delay(
-            sra_id=sra_file.acession_number, pipeline_id=pipeline_id
+            sra_id=sra_file.acession_number,
+            pipeline_id=pipeline_id,
         )
+
+    def _find_pipeline(self, input: PipelineCreateUseCaseInput):
+        pipelines = self.pipeline_repository.find_pipeline(
+            email=input.email,
+            control_organism=[
+                input.control_organism.srr_acession_number_1,
+                input.control_organism.srr_acession_number_2,
+                input.control_organism.srr_acession_number_3,
+            ],
+            experiment_organism=[
+                input.experiment_organism.srr_acession_number_1,
+                input.experiment_organism.srr_acession_number_2,
+                input.experiment_organism.srr_acession_number_3,
+            ],
+            reference_genome_acession_number=input.reference_genome_acession_number,
+        )
+
+        return pipelines[0] if len(pipelines) > 0 else None

@@ -13,13 +13,14 @@ class GeoAdapter(GeoAdapterPort):
 
             cmd = f"prefetch {sra_id} --output-directory temp_files"
 
-            subprocess.check_output(cmd, capture_output=True, text=True, check=True)
+            subprocess.run(cmd, shell=True)
 
             logging.info(f"The downloading to {sra_id} was executed with sucess")
 
             return sra_path
 
         except subprocess.SubprocessError as e:
+            print(e)
             if e.output.startswith("error: {"):
                 error = json.loads(e.output[7:])
                 print(error["code"])
@@ -28,7 +29,4 @@ class GeoAdapter(GeoAdapterPort):
 
     def get_sra_sequence_from_ncbi(self, sra_id: str):
         logging.info("Starting download sra sequence from ncbi ")
-        try:
-            self._prefetch(sra_id)
-        except Exception as e:
-            return f"there was an error when downloading fasta sequence {e}"
+        self._prefetch(sra_id)

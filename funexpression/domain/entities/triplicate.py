@@ -1,8 +1,8 @@
-from enum import Enum
+from enum import StrEnum
 from dataclasses import dataclass
 
 
-class SRAFileStatusEnum(Enum):
+class SRAFileStatusEnum(StrEnum):
     PENDING = "PENDING"
     DOWNLOADING = "DOWNLOADING"
     OK = "OK"
