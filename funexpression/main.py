@@ -2,15 +2,22 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI
 from aplication.helpers.helper import get_srr_list, get_user_name_by_email
 from aplication.interfaces.expression_request_payload import ExpressionCalculateRequest
-# from infrastructure.clients.genbank_service import GenBankService
-# from infrastructure.clients.geo_service import GEOService
-from infrastructure.clients.geo_service import get_fasta_sequence
+
+from domain.factories.pipeline.pipeline_create_usecase_factory import (
+    PipelineCreateUseCaseFactory,
+)
+from domain.usecases.pipeline.input.pipeline_create_input import (
+    PipelineCreateUseCaseInput,
+    PipelineTriplicate,
+)
+
 import uuid
 
-load_dotenv('../.env')
+load_dotenv("../.env")
 
 app = FastAPI()
 router = APIRouter()
+
 
 @router.post("/expression/calculate/")
 def expression_calculate(request: ExpressionCalculateRequest):
@@ -20,11 +27,26 @@ def expression_calculate(request: ExpressionCalculateRequest):
     experiment_transcriptomes = get_srr_list(request.experiment_organism)
     run_id = f"{user}-{str(uuid.uuid4())}"
 
-    for c_transcriptome, e_transcriptome in zip(control_transcriptomes, experiment_transcriptomes):
-        get_fasta_sequence.delay(run_id, 'transcriptome_control', c_transcriptome)
-        # get_fasta_sequence(run_id, 'transcriptome_experiment', e_transcriptome)
+    pipeline_create_usecase = PipelineCreateUseCaseFactory.create()
 
-    # GenBankService().download_fasta_sequence_by_id(gene_id)
-    return control_transcriptomes
+    pipeline_c_input = PipelineCreateUseCaseInput(
+        email=request.email,
+        run_id=run_id,
+        experiment_organism=PipelineTriplicate(
+            srr_acession_number_1=request.experiment_organism.srr_acession_number_1,
+            srr_acession_number_2=request.experiment_organism.srr_acession_number_2,
+            srr_acession_number_3=request.experiment_organism.srr_acession_number_3,
+        ),
+        control_organism=PipelineTriplicate(
+            srr_acession_number_1=request.control_organism.srr_acession_number_1,
+            srr_acession_number_2=request.control_organism.srr_acession_number_2,
+            srr_acession_number_3=request.control_organism.srr_acession_number_3,
+        ),
+        reference_genome_acession_number=request.reference_genome_acession_number,
+    )
+
+    pipeline_create_usecase.execute(pipeline_c_input)
+    return request
+
 
 app.include_router(router)
