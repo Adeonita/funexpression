@@ -16,7 +16,7 @@ class Pipeline:
 
     def to_json(self):
         return {
-            "id": self.id,
+            "id": str(self.id),
             "run_id": self.run_id,
             "email": self.email,
             "stage": self.stage.value,
@@ -54,7 +54,7 @@ class Pipeline:
     @staticmethod
     def from_json(json: dict):
         return Pipeline(
-            id=json["id"],
+            id=str(json["_id"]),
             run_id=json["run_id"],
             email=json["email"],
             stage=PipelineStageEnum(json["stage"]),
