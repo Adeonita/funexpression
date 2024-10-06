@@ -35,7 +35,7 @@ ENTRYPOINT ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--reloa
 
 
 # the image is used to run worker to control organism
-FROM python:3.11-slim-buster AS worker_geo_organisnm_control
+FROM python:3.11-slim-buster AS download_worker
 
 ENV VIRTUAL_ENV=/app/.venv \
     SRATOOLKIT=/app/sratoolkit \
@@ -46,24 +46,5 @@ WORKDIR /funexpression
 COPY --from=builder ${SRATOOLKIT} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 COPY . /funexpression
-# ENTRYPOINT ["celery", "-A", "tasks.geo_task", "worker", "-l", "info", "--pool=threads"]
-
 
 ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=geo_sra_download"]
-
-
-# # the image is used to run worker to control organism
-# FROM python:3.11-slim-buster AS worker_organism_experiment
-
-# ENV VIRTUAL_ENV=/app/.venv \
-#     SRATOOLKIT=/app/sratoolkit \
-#     PATH="/app/.venv/bin:/app/sratoolkit/bin:$PATH"
-
-# WORKDIR /funexpression
-
-# COPY --from=builder ${SRATOOLKIT} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
-
-# COPY . /funexpression
-
-
-# ENTRYPOINT ["celery", "-A", "tasks.geo_task", "worker", "-l", "info", "--pool=threads", "--queues=geo_experiment"]

@@ -1,7 +1,8 @@
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI
-from aplication.helpers.helper import get_srr_list, get_user_name_by_email
-from aplication.interfaces.expression_request_payload import ExpressionCalculateRequest
+
+from application.helpers.helper import get_srr_list, get_user_name_by_email
+from application.interfaces.expression_request_payload import ExpressionCalculateRequest
 
 from domain.factories.pipeline.pipeline_create_usecase_factory import (
     PipelineCreateUseCaseFactory,
@@ -21,11 +22,8 @@ router = APIRouter()
 
 @router.post("/expression/calculate/")
 def expression_calculate(request: ExpressionCalculateRequest):
-    user = get_user_name_by_email(request.email)
-    gene_id = request.reference_genome_acession_number
-    control_transcriptomes = get_srr_list(request.control_organism)
-    experiment_transcriptomes = get_srr_list(request.experiment_organism)
-    run_id = f"{user}-{str(uuid.uuid4())}"
+    user_name = get_user_name_by_email(request.email)
+    run_id = f"{user_name}-{str(uuid.uuid4())}"
 
     pipeline_create_usecase = PipelineCreateUseCaseFactory.create()
 
@@ -45,8 +43,9 @@ def expression_calculate(request: ExpressionCalculateRequest):
         reference_genome_acession_number=request.reference_genome_acession_number,
     )
 
-    pipeline_create_usecase.execute(pipeline_c_input)
-    return request
+    created_pipeline = pipeline_create_usecase.execute(pipeline_c_input)
+
+    return created_pipeline
 
 
 app.include_router(router)

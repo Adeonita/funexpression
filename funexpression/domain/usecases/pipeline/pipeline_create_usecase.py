@@ -30,12 +30,11 @@ class PipelineCreateUseCase:
                 self.pipeline_repository.update_status(
                     created_pipeline.id, PipelineStageEnum.DOWNLOADED
                 )
-                # dispara o usecase de conversão via task
-            print(
-                f"Pipeline already exist with stage:  {created_pipeline.stage.value}"
-            )  # retorna alguma coisa pro usuário avisando
-            return
+                # TODO: dispara o usecase de conversão via task
 
+            return {
+                "message": f"Your pipeline is already created, and the status is: {created_pipeline.stage.value}"
+            }
         experiment_organism = Triplicate(
             srr_1=SRAFile(
                 acession_number=input.experiment_organism.srr_acession_number_1,
