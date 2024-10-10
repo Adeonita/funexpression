@@ -45,6 +45,4 @@ WORKDIR /funexpression
 
 COPY --from=builder ${SRATOOLKIT} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-COPY . /funexpression
-
 ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=geo_sra_download"]
