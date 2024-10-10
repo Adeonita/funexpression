@@ -9,7 +9,7 @@ class PipelineRepositoryPort(Protocol):
     def create(self, email: str, run_id: str, stage: PipelineStageEnum) -> Pipeline:
         pass
 
-    def get(self, run_id: str) -> Pipeline:
+    def get(self, pipeline_id: str) -> Pipeline:
         pass
 
     def update_sra_file_status(
@@ -30,4 +30,7 @@ class PipelineRepositoryPort(Protocol):
         pass
 
     def is_all_file_download_completed(self, pipeline_id: str) -> bool:
+        pass
+
+    def get_sra_files(self, pipeline_id: str) -> dict:
         pass
