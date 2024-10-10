@@ -37,8 +37,8 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
 
         return pipeline
 
-    def get(self, id: str) -> Pipeline:
-        raw_pipeline = self.database.get_by_id("pipelines", id)
+    def get(self, pipeline_id: str) -> Pipeline:
+        raw_pipeline = self.database.get_by_id("pipelines", pipeline_id)
         pipeline = None
         try:
             pipeline = Pipeline.from_json(raw_pipeline)
@@ -168,3 +168,24 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
         )
 
         return control_organism_ready and experiment_organism_ready
+
+    def get_sra_files(self, pipeline_id: str) -> List[str]:
+        pipeline = self.get(pipeline_id)
+
+        if not pipeline:
+            raise Exception("Pipeline not found")
+
+        result = {
+            "control": [
+                pipeline.control_organism.srr_1.acession_number,
+                pipeline.control_organism.srr_2.acession_number,
+                pipeline.control_organism.srr_3.acession_number,
+            ],
+            "experiment": [
+                pipeline.experiment_organism.srr_1.acession_number,
+                pipeline.experiment_organism.srr_2.acession_number,
+                pipeline.experiment_organism.srr_3.acession_number,
+            ],
+        }
+
+        return result
