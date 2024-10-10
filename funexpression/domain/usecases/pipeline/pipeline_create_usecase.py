@@ -1,6 +1,7 @@
 from domain.entities.pipeline import Pipeline
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from domain.entities.triplicate import SRAFileStatusEnum, SRAFile, Triplicate
+from domain.usecases.base_usecase import BaseUseCase
 from domain.usecases.pipeline.input.pipeline_create_input import (
     PipelineCreateUseCaseInput,
 )
@@ -10,14 +11,18 @@ from ports.infrastructure.repositories.pipeline_repository_port import (
 )
 
 
-class PipelineCreateUseCase:
+class PipelineCreateUseCase(BaseUseCase):
 
-    def __init__(self, pipeline_repository: PipelineRepositoryPort, task: TaskPort):
+    def __init__(
+        self,
+        pipeline_repository: PipelineRepositoryPort,
+        task: TaskPort,
+    ):
         self.pipeline_repository = pipeline_repository
         self.task = task
 
     def execute(self, input: PipelineCreateUseCaseInput):
-        created_pipeline = self._find_pipeline(input)
+        created_pipeline = self._find_pipeline(input)  # pending pipeline
 
         if created_pipeline:
             created_pipeline = Pipeline.from_json(created_pipeline)
@@ -30,11 +35,20 @@ class PipelineCreateUseCase:
                 self.pipeline_repository.update_status(
                     created_pipeline.id, PipelineStageEnum.DOWNLOADED
                 )
+                print("Enviando para conversão")
+                self.task.sra_transcriptome_download.delay(
+                    pipeline_id=created_pipeline.id
+                )
+                print("Message sending to the conversion queue")
                 # TODO: dispara o usecase de conversão via task
 
             return {
                 "message": f"Your pipeline is already created, and the status is: {created_pipeline.stage.value}"
             }
+
+        # TODO: verificar se o pipeline já foi criado e está com download ok, pendente de conversão
+        # created_downloaded_pipeline = self._find_pipeline(input)  # pipeline com download ok enviar pra converter
+
         experiment_organism = Triplicate(
             srr_1=SRAFile(
                 acession_number=input.experiment_organism.srr_acession_number_1,
