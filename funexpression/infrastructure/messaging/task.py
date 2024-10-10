@@ -1,4 +1,7 @@
-from typing import Callable
+from domain.factories.conversion.conversion_usecase_factory import (
+    ConversionUseCaseFactory,
+)
+
 from domain.factories.transcriptome.transcriptome_download_usecase_factory import (
     TranscriptomeDownloadUseCaseFactory,
 )
@@ -21,5 +24,13 @@ class Task(TaskPort):
                 sra_id=sra_id, pipeline_id=pipeline_id
             )
             transcriptome_download_usecase.execute(input)
+        except Exception as e:
+            return f"there was an error when downloading sra sequence {e}"
+
+    @app.task(queue="sra_to_fasta_conversion")
+    def sra_to_fasta_conversion(pipeline_id: str):
+        try:
+            conversion_sra_to_fasta_usecase = ConversionUseCaseFactory.create()
+            conversion_sra_to_fasta_usecase.execute(pipeline_id)
         except Exception as e:
             return f"there was an error when downloading sra sequence {e}"
