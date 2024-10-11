@@ -9,14 +9,15 @@ from ports.infrastructure.messaging.task_port import TaskPort
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
 )
+from infrastructure.celery import app
 
 
 class PipelineCreateUseCase(BaseUseCase):
 
     def __init__(
         self,
+        task: TaskPort,  # TODO: remover task dependency from this class and your respective factory
         pipeline_repository: PipelineRepositoryPort,
-        task: TaskPort,
     ):
         self.pipeline_repository = pipeline_repository
         self.task = task
@@ -36,11 +37,14 @@ class PipelineCreateUseCase(BaseUseCase):
                     created_pipeline.id, PipelineStageEnum.DOWNLOADED
                 )
                 print("Enviando para conversão")
-                self.task.sra_transcriptome_download.delay(
-                    pipeline_id=created_pipeline.id
+
+                app.send_task(
+                    "infrastructure.messaging.task.sra_to_fasta_conversion",
+                    args=(created_pipeline.id,),
+                    queue="sra_to_fasta_conversion",
                 )
+
                 print("Message sending to the conversion queue")
-                # TODO: dispara o usecase de conversão via task
 
             return {
                 "message": f"Your pipeline is already created, and the status is: {created_pipeline.stage.value}"
@@ -99,9 +103,12 @@ class PipelineCreateUseCase(BaseUseCase):
         self._download_sra(tri.srr_3, pipeline_id)
 
     def _download_sra(self, sra_file: SRAFile, pipeline_id: str):
-        self.task.sra_transcriptome_download.delay(
-            sra_id=sra_file.acession_number,
-            pipeline_id=pipeline_id,
+        sra_id = sra_file.acession_number
+
+        app.send_task(
+            "infrastructure.messaging.task.sra_transcriptome_download",
+            args=(sra_id, pipeline_id),
+            queue="geo_sra_download",
         )
 
     def _find_pipeline(self, input: PipelineCreateUseCaseInput):

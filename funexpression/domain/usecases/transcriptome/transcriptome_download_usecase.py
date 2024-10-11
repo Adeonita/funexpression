@@ -11,10 +11,11 @@ from domain.usecases.transcriptome.input.transcriptome_download_usecase_input im
 from ports.infrastructure.bio_database.geo_adapter_port import GeoAdapterPort
 
 # from ports.infrastructure.messaging.task_port import TaskPort
-from ports.infrastructure.messaging.task_port import TaskPort
+# from ports.infrastructure.messaging.task_port import TaskPort
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
 )
+import celery
 
 
 class TranscriptomeDownloadUseCase(BaseUseCase):
@@ -23,14 +24,11 @@ class TranscriptomeDownloadUseCase(BaseUseCase):
         self,
         geo_adapter: GeoAdapterPort,
         pipeline_repository: PipelineRepositoryPort,
-        task: TaskPort,
+        # task: TaskPort,
     ):
         self.geo_adapter = geo_adapter
         self.pipeline_repository = pipeline_repository
-        self.task = task
-        # self.conversion_sra_to_fasta_usecase = (
-        #     ConversionSraToFastaUseCaseFactory.create()
-        # )
+        # self.task = task
 
     def execute(self, input: TranscriptomeDownloadUseCaseInput) -> str:
         print(f"Processing download for {input.sra_id}")
@@ -50,7 +48,12 @@ class TranscriptomeDownloadUseCase(BaseUseCase):
 
             # aqui
             print("Sending to the conversion queue...")
-            self.task.convert_sra_to_fasta(pipeline_id=input.pipeline_id)
+            # TODO: utilizar o novo método de enviar a task para a fila
+            # self.task.convert_sra_to_fasta(pipeline_id=input.pipeline_id)
+            celery.current_app.send_task(
+                "infrastructure.messaging.task", ("67071045fa9904a7632389be",)
+            )
+
             print("Message sent to the conversion queue 2")
             # Chama a task que executa o usecase da próxima etapa
 
