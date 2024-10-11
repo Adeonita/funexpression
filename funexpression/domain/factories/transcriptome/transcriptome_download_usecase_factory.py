@@ -3,7 +3,6 @@ from domain.usecases.transcriptome.transcriptome_download_usecase import (
 )
 from infrastructure.bio_database.geo_adapter import GeoAdapter
 
-from infrastructure.messaging.task import Task
 from infrastructure.repositories.pipeline_repository_mongo import (
     PipelineRepositoryMongo,
 )
@@ -13,8 +12,7 @@ class TranscriptomeDownloadUseCaseFactory:
 
     @staticmethod
     def create():
-        task = Task()
         geo_adapter = GeoAdapter()
         pipeline_repository = PipelineRepositoryMongo()
 
-        return TranscriptomeDownloadUseCase(geo_adapter, pipeline_repository, task)
+        return TranscriptomeDownloadUseCase(geo_adapter, pipeline_repository)
