@@ -15,7 +15,8 @@ from ports.infrastructure.bio_database.geo_adapter_port import GeoAdapterPort
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
 )
-import celery
+
+from infrastructure.celery import app
 
 
 class TranscriptomeDownloadUseCase(BaseUseCase):
@@ -24,11 +25,9 @@ class TranscriptomeDownloadUseCase(BaseUseCase):
         self,
         geo_adapter: GeoAdapterPort,
         pipeline_repository: PipelineRepositoryPort,
-        # task: TaskPort,
     ):
         self.geo_adapter = geo_adapter
         self.pipeline_repository = pipeline_repository
-        # self.task = task
 
     def execute(self, input: TranscriptomeDownloadUseCaseInput) -> str:
         print(f"Processing download for {input.sra_id}")
@@ -46,12 +45,12 @@ class TranscriptomeDownloadUseCase(BaseUseCase):
             )
             print("Download step done")
 
-            # aqui
             print("Sending to the conversion queue...")
-            # TODO: utilizar o novo método de enviar a task para a fila
-            # self.task.convert_sra_to_fasta(pipeline_id=input.pipeline_id)
-            celery.current_app.send_task(
-                "infrastructure.messaging.task", ("67071045fa9904a7632389be",)
+
+            app.send_task(
+                "infrastructure.messaging.task.sra_to_fasta_conversion",
+                args=(input.pipeline_id,),
+                queue="sra_to_fasta_conversion",
             )
 
             print("Message sent to the conversion queue 2")
