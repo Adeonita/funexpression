@@ -1,22 +1,18 @@
-from domain.entities.pipeline_stage_enum import PipelineStageEnum
-from domain.entities.triplicate import SRAFileStatusEnum
-
-# from domain.factories.transcriptome.conversion_sra_to_fasta_usecase import (
-#     ConversionSraToFastaUseCaseFactory,
-# )
 from domain.usecases.base_usecase import BaseUseCase
+from domain.entities.triplicate import SRAFileStatusEnum
+from domain.entities.pipeline_stage_enum import PipelineStageEnum
+from domain.usecases.conversion.input.conversion_sra_to_fasta_usecase_input import (
+    ConversionSraToFastaUseCaseInput,
+)
+from ports.infrastructure.bio_database.geo_adapter_port import GeoAdapterPort
 from domain.usecases.transcriptome.input.transcriptome_download_usecase_input import (
     TranscriptomeDownloadUseCaseInput,
 )
-from ports.infrastructure.bio_database.geo_adapter_port import GeoAdapterPort
-
-# from ports.infrastructure.messaging.task_port import TaskPort
-# from ports.infrastructure.messaging.task_port import TaskPort
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
 )
 
-from infrastructure.celery import app
+from infrastructure.celery import convert_sra_to_fasta_task
 
 
 class TranscriptomeDownloadUseCase(BaseUseCase):
@@ -30,7 +26,12 @@ class TranscriptomeDownloadUseCase(BaseUseCase):
         self.pipeline_repository = pipeline_repository
 
     def execute(self, input: TranscriptomeDownloadUseCaseInput) -> str:
-        print(f"Processing download for {input.sra_id}")
+        sra_id = input.sra_id
+        pipeline_id = input.pipeline_id
+        organism_group = input.organism_group
+
+        print(f"Processing download for {sra_id}")
+
         sra_path = self.geo_adapter.get_sra_sequence_from_ncbi(input.sra_id)
         self.pipeline_repository.update_sra_file_status(
             pipeline_id=input.pipeline_id,
@@ -47,13 +48,12 @@ class TranscriptomeDownloadUseCase(BaseUseCase):
 
             print("Sending to the conversion queue...")
 
-            app.send_task(
-                "infrastructure.messaging.task.sra_to_fasta_conversion",
-                args=(input.pipeline_id,),
-                queue="sra_to_fasta_conversion",
+            input = ConversionSraToFastaUseCaseInput(
+                sra_id, pipeline_id, organism_group
             )
 
-            print("Message sent to the conversion queue 2")
-            # Chama a task que executa o usecase da próxima etapa
+            convert_sra_to_fasta_task(input)
+
+            print("Message sent to the conversion queue!")
 
         return sra_path
