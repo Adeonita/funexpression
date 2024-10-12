@@ -28,6 +28,6 @@ def convert_sra_to_fasta_task(input: ConversionSraToFastaUseCaseInput):
 def download_sra_task(input: TranscriptomeDownloadUseCaseInput):
     app.send_task(
         "infrastructure.messaging.task.sra_transcriptome_download",
-        args=(input.sra_id, input.pipeline_id),
+        args=(input.sra_id, input.pipeline_id, input.organism_group),
         queue="geo_sra_download",
     )

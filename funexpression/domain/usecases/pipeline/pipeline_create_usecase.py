@@ -47,14 +47,14 @@ class PipelineCreateUseCase(BaseUseCase):
                     created_pipeline.id, PipelineStageEnum.DOWNLOADED
                 )
 
-                self._convert_pipeline(created_pipeline)
+                self._convert_transcriptomes(created_pipeline)
 
                 return {
                     "message": f"Your pipeline is already created, and the status is: {created_pipeline.stage.value}"
                 }
             # downloaded pipeline
             elif created_pipeline.stage == PipelineStageEnum.DOWNLOADED:
-                self._convert_pipeline(created_pipeline)
+                self._convert_transcriptomes(created_pipeline)
                 return {
                     "message": f"Your pipeline is already created, and are await to conversion. The actual status is {created_pipeline.stage.value}"
                 }
@@ -71,8 +71,7 @@ class PipelineCreateUseCase(BaseUseCase):
             reference_genome_acession_number=input.reference_genome_acession_number,
         )
 
-        self._download_triplicate(experiment_organism, pipeline.id)
-        self._download_triplicate(control_organism, pipeline.id)
+        self._download_transcriptomes(pipeline)
 
         return pipeline
 
@@ -108,15 +107,28 @@ class PipelineCreateUseCase(BaseUseCase):
             ),
         )
 
-    def _download_triplicate(self, tri: Triplicate, pipeline_id: str):
-        self._download_sra(tri.srr_1, pipeline_id)
-        self._download_sra(tri.srr_2, pipeline_id)
-        self._download_sra(tri.srr_3, pipeline_id)
+    def _download_transcriptomes(self, pipeline: Pipeline):
+        self._download_triplicate(
+            pipeline.control_organism, pipeline.id, OrganinsGroupEnum.CONTROL
+        )
 
-    def _download_sra(self, sra_file: SRAFile, pipeline_id: str):
+        self._download_triplicate(
+            pipeline.experiment_organism, pipeline.id, OrganinsGroupEnum.EXPERIMENT
+        )
+
+    def _download_triplicate(
+        self, tri: Triplicate, pipeline_id: str, organism_group: OrganinsGroupEnum
+    ):
+        self._download_sra(tri.srr_1, pipeline_id, organism_group)
+        self._download_sra(tri.srr_2, pipeline_id, organism_group)
+        self._download_sra(tri.srr_3, pipeline_id, organism_group)
+
+    def _download_sra(
+        self, sra_file: SRAFile, pipeline_id: str, organism_group: OrganinsGroupEnum
+    ):
         sra_id = sra_file.acession_number
 
-        input = TranscriptomeDownloadUseCaseInput(sra_id, pipeline_id)
+        input = TranscriptomeDownloadUseCaseInput(sra_id, pipeline_id, organism_group)
         download_sra_task(input)
 
     def _convert_sra_to_fasta(
@@ -134,7 +146,7 @@ class PipelineCreateUseCase(BaseUseCase):
         self._convert_sra_to_fasta(tri.srr_2, pipeline_id, organism_group)
         self._convert_sra_to_fasta(tri.srr_3, pipeline_id, organism_group)
 
-    def _convert_pipeline(self, pipeline: Pipeline):
+    def _convert_transcriptomes(self, pipeline: Pipeline):
         self._convert_triplicate(
             pipeline.experiment_organism, pipeline.id, OrganinsGroupEnum.EXPERIMENT
         )
