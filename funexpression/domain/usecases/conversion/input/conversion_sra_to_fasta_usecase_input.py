@@ -3,4 +3,6 @@ from dataclasses import dataclass
 
 @dataclass
 class ConversionSraToFastaUseCaseInput:
-    pipeline_id: int
+    sra_id: str
+    pipeline_id: str
+    organism_group: str
