@@ -8,6 +8,11 @@ class SRAFileStatusEnum(StrEnum):
     OK = "OK"
 
 
+class OrganinsGroupEnum(StrEnum):
+    CONTROL = "CONTROL"
+    EXPERIMENT = "EXPERIMENT"
+
+
 @dataclass
 class SRAFile:
     acession_number: str
