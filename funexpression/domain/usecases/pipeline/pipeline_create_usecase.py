@@ -1,26 +1,36 @@
 from domain.entities.pipeline import Pipeline
-from domain.entities.pipeline_stage_enum import PipelineStageEnum
-from domain.entities.triplicate import SRAFileStatusEnum, SRAFile, Triplicate
 from domain.usecases.base_usecase import BaseUseCase
+from ports.infrastructure.messaging.task_port import TaskPort
+from domain.entities.pipeline_stage_enum import PipelineStageEnum
+from infrastructure.celery import convert_sra_to_fasta_task, download_sra_task
+
+from domain.entities.triplicate import (
+    SRAFile,
+    Triplicate,
+    OrganinsGroupEnum,
+    SRAFileStatusEnum,
+)
 from domain.usecases.pipeline.input.pipeline_create_input import (
     PipelineCreateUseCaseInput,
 )
-from ports.infrastructure.messaging.task_port import TaskPort
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
 )
-from infrastructure.celery import app
+from domain.usecases.conversion.input.conversion_sra_to_fasta_usecase_input import (
+    ConversionSraToFastaUseCaseInput,
+)
+from domain.usecases.transcriptome.input.transcriptome_download_usecase_input import (
+    TranscriptomeDownloadUseCaseInput,
+)
 
 
 class PipelineCreateUseCase(BaseUseCase):
 
     def __init__(
         self,
-        task: TaskPort,  # TODO: remover task dependency from this class and your respective factory
         pipeline_repository: PipelineRepositoryPort,
     ):
         self.pipeline_repository = pipeline_repository
-        self.task = task
 
     def execute(self, input: PipelineCreateUseCaseInput):
         created_pipeline = self._find_pipeline(input)  # pending pipeline
@@ -36,59 +46,21 @@ class PipelineCreateUseCase(BaseUseCase):
                 self.pipeline_repository.update_status(
                     created_pipeline.id, PipelineStageEnum.DOWNLOADED
                 )
-                print("Enviando para conversão")
 
-                app.send_task(
-                    "infrastructure.messaging.task.sra_to_fasta_conversion",
-                    args=(created_pipeline.id,),
-                    queue="sra_to_fasta_conversion",
-                )
-
-                print("Message sending to the conversion queue")
+                self._convert_pipeline(created_pipeline)
 
                 return {
                     "message": f"Your pipeline is already created, and the status is: {created_pipeline.stage.value}"
                 }
             # downloaded pipeline
             elif created_pipeline.stage == PipelineStageEnum.DOWNLOADED:
-                app.send_task(
-                    "infrastructure.messaging.task.sra_to_fasta_conversion",
-                    args=(created_pipeline.id,),
-                    queue="sra_to_fasta_conversion",
-                )
+                self._convert_pipeline(created_pipeline)
                 return {
                     "message": f"Your pipeline is already created, and are await to conversion. The actual status is {created_pipeline.stage.value}"
                 }
 
-        experiment_organism = Triplicate(
-            srr_1=SRAFile(
-                acession_number=input.experiment_organism.srr_acession_number_1,
-                status=SRAFileStatusEnum.PENDING,
-            ),
-            srr_2=SRAFile(
-                acession_number=input.experiment_organism.srr_acession_number_2,
-                status=SRAFileStatusEnum.PENDING,
-            ),
-            srr_3=SRAFile(
-                acession_number=input.experiment_organism.srr_acession_number_3,
-                status=SRAFileStatusEnum.PENDING,
-            ),
-        )
-
-        control_organism = Triplicate(
-            srr_1=SRAFile(
-                acession_number=input.control_organism.srr_acession_number_1,
-                status=SRAFileStatusEnum.PENDING,
-            ),
-            srr_2=SRAFile(
-                acession_number=input.control_organism.srr_acession_number_2,
-                status=SRAFileStatusEnum.PENDING,
-            ),
-            srr_3=SRAFile(
-                acession_number=input.control_organism.srr_acession_number_3,
-                status=SRAFileStatusEnum.PENDING,
-            ),
-        )
+        experiment_organism = self._get_experiment_organism(input)
+        control_organism = self._get_control_organism(input)
 
         pipeline: Pipeline = self.pipeline_repository.create(
             email=input.email,
@@ -104,6 +76,38 @@ class PipelineCreateUseCase(BaseUseCase):
 
         return pipeline
 
+    def _get_control_organism(self, input: PipelineCreateUseCaseInput):
+        return Triplicate(
+            srr_1=SRAFile(
+                acession_number=input.control_organism.srr_acession_number_1,
+                status=SRAFileStatusEnum.PENDING,
+            ),
+            srr_2=SRAFile(
+                acession_number=input.control_organism.srr_acession_number_2,
+                status=SRAFileStatusEnum.PENDING,
+            ),
+            srr_3=SRAFile(
+                acession_number=input.control_organism.srr_acession_number_3,
+                status=SRAFileStatusEnum.PENDING,
+            ),
+        )
+
+    def _get_experiment_organism(self, input: PipelineCreateUseCaseInput):
+        return Triplicate(
+            srr_1=SRAFile(
+                acession_number=input.experiment_organism.srr_acession_number_1,
+                status=SRAFileStatusEnum.PENDING,
+            ),
+            srr_2=SRAFile(
+                acession_number=input.experiment_organism.srr_acession_number_2,
+                status=SRAFileStatusEnum.PENDING,
+            ),
+            srr_3=SRAFile(
+                acession_number=input.experiment_organism.srr_acession_number_3,
+                status=SRAFileStatusEnum.PENDING,
+            ),
+        )
+
     def _download_triplicate(self, tri: Triplicate, pipeline_id: str):
         self._download_sra(tri.srr_1, pipeline_id)
         self._download_sra(tri.srr_2, pipeline_id)
@@ -112,10 +116,30 @@ class PipelineCreateUseCase(BaseUseCase):
     def _download_sra(self, sra_file: SRAFile, pipeline_id: str):
         sra_id = sra_file.acession_number
 
-        app.send_task(
-            "infrastructure.messaging.task.sra_transcriptome_download",
-            args=(sra_id, pipeline_id),
-            queue="geo_sra_download",
+        input = TranscriptomeDownloadUseCaseInput(sra_id, pipeline_id)
+        download_sra_task(input)
+
+    def _convert_sra_to_fasta(
+        self, sra_file: SRAFile, pipeline_id: str, organism_group: str
+    ):
+        sra_id = sra_file.acession_number
+
+        input = ConversionSraToFastaUseCaseInput(sra_id, pipeline_id, organism_group)
+        convert_sra_to_fasta_task(input)
+
+    def _convert_triplicate(
+        self, tri: Triplicate, pipeline_id: str, organism_group: str
+    ):
+        self._convert_sra_to_fasta(tri.srr_1, pipeline_id, organism_group)
+        self._convert_sra_to_fasta(tri.srr_2, pipeline_id, organism_group)
+        self._convert_sra_to_fasta(tri.srr_3, pipeline_id, organism_group)
+
+    def _convert_pipeline(self, pipeline: Pipeline):
+        self._convert_triplicate(
+            pipeline.experiment_organism, pipeline.id, OrganinsGroupEnum.EXPERIMENT
+        )
+        self._convert_triplicate(
+            pipeline.control_organism, pipeline.id, OrganinsGroupEnum.CONTROL
         )
 
     def _find_pipeline(self, input: PipelineCreateUseCaseInput):
