@@ -34,7 +34,6 @@ class ConversionSraToFastaUseCase:
         sra_files = self._split_list(all_organisms, MAX_SIZE)
 
         for elements in sra_files:
-            print("Processing for elements:", elements)
             for element in elements:
                 group = self._get_group(
                     element, cotrol_organism_list, experiment_organism_list
@@ -57,9 +56,7 @@ class ConversionSraToFastaUseCase:
     def _create_folder_if_not_exist(
         self, pipeline_id: str, group: str, acession_number: str
     ):
-        temp_files = os.path.join(
-            os.getcwd(), "pipelines/", pipeline_id, group, acession_number
-        )
+        temp_files = os.path.join("pipelines/", pipeline_id, group, acession_number)
 
         if not os.path.exists(temp_files):
             os.makedirs(temp_files)
