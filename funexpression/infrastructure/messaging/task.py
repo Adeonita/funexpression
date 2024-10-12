@@ -32,11 +32,11 @@ class Task(TaskPort):
         # except Exception as e:
         #     return f"there was an error when downloading sra sequence {e}"
 
-    @app.task(queue="sra_to_fasta_conversion")
+    @app.task(bind=True, queue="sra_to_fasta_conversion")
     def sra_to_fasta_conversion(self, pipeline_id: str):
         try:
             conversion_usecase = ConversionSraToFastaUseCaseFactory.create()
-            conversion_usecase.execute("67071045fa9904a7632389be")
+            conversion_usecase.execute(pipeline_id)
         except Exception as e:
             return f"there was an error when downloading sra sequence {e}"
 
