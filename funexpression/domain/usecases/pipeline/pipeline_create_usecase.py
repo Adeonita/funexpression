@@ -46,12 +46,19 @@ class PipelineCreateUseCase(BaseUseCase):
 
                 print("Message sending to the conversion queue")
 
-            return {
-                "message": f"Your pipeline is already created, and the status is: {created_pipeline.stage.value}"
-            }
-
-        # TODO: verificar se o pipeline já foi criado e está com download ok, pendente de conversão
-        # created_downloaded_pipeline = self._find_pipeline(input)  # pipeline com download ok enviar pra converter
+                return {
+                    "message": f"Your pipeline is already created, and the status is: {created_pipeline.stage.value}"
+                }
+            # downloaded pipeline
+            elif created_pipeline.stage == PipelineStageEnum.DOWNLOADED:
+                app.send_task(
+                    "infrastructure.messaging.task.sra_to_fasta_conversion",
+                    args=(created_pipeline.id,),
+                    queue="sra_to_fasta_conversion",
+                )
+                return {
+                    "message": f"Your pipeline is already created, and are await to conversion. The actual status is {created_pipeline.stage.value}"
+                }
 
         experiment_organism = Triplicate(
             srr_1=SRAFile(
