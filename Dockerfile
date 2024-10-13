@@ -34,7 +34,7 @@ WORKDIR /funexpression
 ENTRYPOINT ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--reload"]
 
 
-# the image is used to run worker to control organism
+# the image is used to run worker for downloading sra files
 FROM python:3.11-slim-buster AS download_worker
 
 ENV VIRTUAL_ENV=/app/.venv \
@@ -45,6 +45,20 @@ WORKDIR /funexpression
 
 COPY --from=builder ${SRATOOLKIT} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-# ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=geo_sra_download", "--concurrency=3"]
+ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=geo_sra_download", "--concurrency=3"]
+
+# the image is used to run worker for conversion sra to fasta files
+FROM python:3.11-slim-buster AS conversion_worker
+
+ENV VIRTUAL_ENV=/app/.venv \
+    SRATOOLKIT=/app/sratoolkit \
+    PATH="/app/.venv/bin:/app/sratoolkit/bin:$PATH"
+
+WORKDIR /funexpression
+
+COPY --from=builder ${SRATOOLKIT} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+
 ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=sra_to_fasta_conversion", "--concurrency=3"]
+
+#TODO: add trimming worker
 # ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=trimming"] #TODO: trimming queue
