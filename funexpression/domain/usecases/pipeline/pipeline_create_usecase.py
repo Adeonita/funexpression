@@ -27,16 +27,39 @@ class PipelineCreateUseCase(BaseUseCase):
         self.pipeline_repository = pipeline_repository
 
     def execute(self, input: PipelineCreateUseCaseInput):
-        created_pipeline = self._find_pipeline(input)  # pending pipeline
+        created_pipeline = self._find_pipeline(input)
 
         if created_pipeline:
             created_pipeline = Pipeline.from_json(created_pipeline)
-            if (
-                created_pipeline.stage == PipelineStageEnum.PENDING
-                and self.pipeline_repository.is_all_file_download_completed(
+            sra_files_download_completed = (
+                self.pipeline_repository.is_all_file_download_downloaded(
                     created_pipeline.id
                 )
-            ):
+            )
+
+            pipeline_sra_files_download_pending = (
+                created_pipeline.stage == PipelineStageEnum.PENDING
+                and not sra_files_download_completed
+            )
+
+            if pipeline_sra_files_download_pending:
+                return {
+                    "message": "Your pipeline is awaiting download the sra files, please wait a moment",
+                    "pipeline_stage": created_pipeline.stage.value,
+                }
+                # I will should be some thing?
+
+            pipeline_sra_files_downloaded = (
+                created_pipeline.stage == PipelineStageEnum.PENDING
+                and sra_files_download_completed
+            )
+
+            pipeline_sra_files_read_to_convert = (
+                created_pipeline.stage == PipelineStageEnum.DOWNLOADED
+                and sra_files_download_completed
+            )
+
+            if pipeline_sra_files_downloaded:
                 self.pipeline_repository.update_status(
                     created_pipeline.id, PipelineStageEnum.DOWNLOADED
                 )
@@ -44,14 +67,26 @@ class PipelineCreateUseCase(BaseUseCase):
                 self._convert_transcriptomes(created_pipeline)
 
                 return {
-                    "message": f"Your pipeline is already created, and the status is: {created_pipeline.stage.value}"
+                    "message": f"Your pipeline is already created, and the sra files are awaiting was sent to conversion",
+                    "pipeline_stage": created_pipeline.stage.value,
                 }
             # downloaded pipeline
-            elif created_pipeline.stage == PipelineStageEnum.DOWNLOADED:
+            elif pipeline_sra_files_read_to_convert:
                 self._convert_transcriptomes(created_pipeline)
                 return {
-                    "message": f"Your pipeline is already created, and are await to conversion. The actual status is {created_pipeline.stage.value}"
+                    "message": f"Your pipeline is already created, and are await to conversion.",
+                    "pipeline_stage": created_pipeline.stage.value,
                 }
+            # elif created_pipeline.stage == PipelineStageEnum.CONVERTED:
+            #     self._trimming_transcriptomes(created_pipeline)
+            # elif created_pipeline.stage == PipelineStageEnum.TRIMMED:
+            #     self._align_transcriptomes(created_pipeline)
+            # elif created_pipeline.stage == PipelineStageEnum.ALIGNED:
+            #     self._normalize_transcriptomes(created_pipeline)
+            # elif created_pipeline.stage == PipelineStageEnum.COUNTED:
+            #     self._differential_expression(created_pipeline)
+            # elif created_pipeline.stage == PipelineStageEnum.DIFFERENTIAL_EXPRESSION:
+            #     self._send_email(created_pipeline)
 
         experiment_organism = self._get_experiment_organism(input)
         control_organism = self._get_control_organism(input)
