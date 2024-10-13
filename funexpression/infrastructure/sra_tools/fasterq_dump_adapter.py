@@ -1,6 +1,5 @@
-import json
-import logging
 import os
+import logging
 import subprocess
 
 
@@ -44,27 +43,3 @@ class FasterqDumpAdapter:
 
         except subprocess.CalledProcessError as e:
             raise Exception(f"Error when extract {id}: {e}")
-
-        # try:
-
-        #     sra_path = os.path.join(os.getcwd(), "temp_files/")
-
-        #     is_valid_sra = self._is_valid_sra_path(sra_path, id)
-
-        #     if is_valid_sra == True:
-        #         logging.info(f"Generating fastq for: {id}")
-
-        #         input_file_dir = f"../../temp_files/{id}"
-
-        #         cmd = f"fasterq-dump {input_file_dir} --outdir {outdir}"
-
-        #         subprocess.run(cmd, shell=True, check=True)
-
-        #         logging.info(
-        #             f"conversion from sra to fastq to {id} was finish the file can be finded in {outdir} "
-        #         )
-
-        #         return True
-
-        # except subprocess.CalledProcessError as e:
-        #     raise Exception(f"Error when extract {id}: {e}")
