@@ -48,11 +48,7 @@ class TranscriptomeDownloadUseCase(BaseUseCase):
 
             print("Sending to the conversion queue...")
 
-            input = ConversionSraToFastaUseCaseInput(
-                sra_id, pipeline_id, organism_group
-            )
-
-            convert_sra_to_fasta_task(input)
+            convert_sra_to_fasta_task(sra_id, pipeline_id, organism_group)
 
             print("Message sent to the conversion queue!")
 

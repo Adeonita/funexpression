@@ -17,17 +17,17 @@ app = Celery(
 )
 
 
-def convert_sra_to_fasta_task(input: ConversionSraToFastaUseCaseInput):
+def convert_sra_to_fasta_task(sra_id, pipeline_id, organism_group):
     app.send_task(
         "infrastructure.messaging.task.sra_to_fasta_conversion",
-        args=(input.sra_id, input.pipeline_id, input.organism_group),
+        args=(sra_id, pipeline_id, organism_group),
         queue="sra_to_fasta_conversion",
     )
 
 
-def download_sra_task(input: TranscriptomeDownloadUseCaseInput):
+def download_sra_task(sra_id, pipeline_id, organism_group):
     app.send_task(
         "infrastructure.messaging.task.sra_transcriptome_download",
-        args=(input.sra_id, input.pipeline_id, input.organism_group),
+        args=(sra_id, pipeline_id, organism_group),
         queue="geo_sra_download",
     )

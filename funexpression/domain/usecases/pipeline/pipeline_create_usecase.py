@@ -16,12 +16,6 @@ from domain.usecases.pipeline.input.pipeline_create_input import (
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
 )
-from domain.usecases.conversion.input.conversion_sra_to_fasta_usecase_input import (
-    ConversionSraToFastaUseCaseInput,
-)
-from domain.usecases.transcriptome.input.transcriptome_download_usecase_input import (
-    TranscriptomeDownloadUseCaseInput,
-)
 
 
 class PipelineCreateUseCase(BaseUseCase):
@@ -128,16 +122,14 @@ class PipelineCreateUseCase(BaseUseCase):
     ):
         sra_id = sra_file.acession_number
 
-        input = TranscriptomeDownloadUseCaseInput(sra_id, pipeline_id, organism_group)
-        download_sra_task(input)
+        download_sra_task(sra_id, pipeline_id, organism_group)
 
     def _convert_sra_to_fasta(
         self, sra_file: SRAFile, pipeline_id: str, organism_group: str
     ):
         sra_id = sra_file.acession_number
 
-        input = ConversionSraToFastaUseCaseInput(sra_id, pipeline_id, organism_group)
-        convert_sra_to_fasta_task(input)
+        convert_sra_to_fasta_task(sra_id, pipeline_id, organism_group)
 
     def _convert_triplicate(
         self, tri: Triplicate, pipeline_id: str, organism_group: str
