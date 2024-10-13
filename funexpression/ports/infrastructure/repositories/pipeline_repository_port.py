@@ -29,7 +29,10 @@ class PipelineRepositoryPort(Protocol):
     ) -> List[Pipeline]:
         pass
 
-    def is_all_file_download_completed(self, pipeline_id: str) -> bool:
+    def is_all_file_download_downloaded(self, pipeline_id: str) -> bool:
+        pass
+
+    def is_all_file_download_converted(self, pipeline_id: str) -> bool:
         pass
 
     def get_sra_files(self, pipeline_id: str) -> dict:
