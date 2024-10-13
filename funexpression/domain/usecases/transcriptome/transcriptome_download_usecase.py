@@ -36,10 +36,10 @@ class TranscriptomeDownloadUseCase(BaseUseCase):
         self.pipeline_repository.update_sra_file_status(
             pipeline_id=input.pipeline_id,
             sra_id=input.sra_id,
-            status=SRAFileStatusEnum.OK,
+            STATUS=SRAFileStatusEnum.DOWNLOADED,
         )
 
-        if self.pipeline_repository.is_all_file_download_completed(input.pipeline_id):
+        if self.pipeline_repository.is_all_file_download_downloaded(input.pipeline_id):
             self.pipeline_repository.update_status(
                 pipeline_id=input.pipeline_id,
                 pipeline_stage=PipelineStageEnum.DOWNLOADED,

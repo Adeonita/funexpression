@@ -4,8 +4,8 @@ from dataclasses import dataclass
 
 class SRAFileStatusEnum(StrEnum):
     PENDING = "PENDING"
-    DOWNLOADING = "DOWNLOADING"
-    OK = "OK"
+    DOWNLOADED = "DOWNLOADED"
+    CONVERTED = "CONVERTED"
 
 
 class OrganinsGroupEnum(StrEnum):
