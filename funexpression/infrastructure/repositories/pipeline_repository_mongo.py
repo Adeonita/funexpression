@@ -1,4 +1,5 @@
 from typing import List
+from bson import ObjectId
 from domain.entities.pipeline import Pipeline
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from domain.entities.triplicate import SRAFileStatusEnum, Triplicate
@@ -114,34 +115,12 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
     ):
         query = {
             "email": email,
-            "control_organism": {
-                "srr_1": {
-                    "acession_number": control_organism[0],
-                    "status": SRAFileStatusEnum.PENDING.value,
-                },
-                "srr_2": {
-                    "acession_number": control_organism[1],
-                    "status": SRAFileStatusEnum.PENDING.value,
-                },
-                "srr_3": {
-                    "acession_number": control_organism[2],
-                    "status": SRAFileStatusEnum.PENDING.value,
-                },
-            },
-            "experiment_organism": {
-                "srr_1": {
-                    "acession_number": experiment_organism[0],
-                    "status": SRAFileStatusEnum.PENDING.value,
-                },
-                "srr_2": {
-                    "acession_number": experiment_organism[1],
-                    "status": SRAFileStatusEnum.PENDING.value,
-                },
-                "srr_3": {
-                    "acession_number": experiment_organism[2],
-                    "status": SRAFileStatusEnum.PENDING.value,
-                },
-            },
+            "control_organism.srr_1.acession_number": control_organism[0],
+            "control_organism.srr_2.acession_number": control_organism[1],
+            "control_organism.srr_3.acession_number": control_organism[2],
+            "experiment_organism.srr_1.acession_number": experiment_organism[0],
+            "experiment_organism.srr_2.acession_number": experiment_organism[1],
+            "experiment_organism.srr_3.acession_number": experiment_organism[2],
             "reference_genome_acession_number": reference_genome_acession_number,
         }
 
@@ -149,25 +128,55 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
 
         return pipelines
 
-    def is_all_file_download_completed(self, pipeline_id: str) -> bool:
-        pipeline = self.get(pipeline_id)
+    def _get_pipeline_by_sra_state(
+        self, pipeline_id: str, sra_status: SRAFileStatusEnum
+    ):
+
+        query = {
+            "_id": ObjectId(pipeline_id),
+            "control_organism.srr_1.status": sra_status,
+            "control_organism.srr_2.status": sra_status,
+            "control_organism.srr_3.status": sra_status,
+            "experiment_organism.srr_1.status": sra_status,
+            "experiment_organism.srr_2.status": sra_status,
+            "experiment_organism.srr_3.status": sra_status,
+        }
+
+        pipeline = self.database.find("pipelines", query)
 
         if not pipeline:
-            raise Exception("Pipeline not found")
+            return False
 
-        control_organism_ready = (
-            pipeline.control_organism.srr_1.status == SRAFileStatusEnum.OK
-            and pipeline.control_organism.srr_2.status == SRAFileStatusEnum.OK
-            and pipeline.control_organism.srr_3.status == SRAFileStatusEnum.OK
+        control = pipeline[0]["control_organism"]
+        experiment = pipeline[0]["experiment_organism"]
+
+        control_organism = (
+            control["srr_1"]["status"],
+            control["srr_2"]["status"],
+            control["srr_3"]["status"],
         )
 
-        experiment_organism_ready = (
-            pipeline.experiment_organism.srr_1.status == SRAFileStatusEnum.OK
-            and pipeline.experiment_organism.srr_2.status == SRAFileStatusEnum.OK
-            and pipeline.experiment_organism.srr_3.status == SRAFileStatusEnum.OK
+        experiment_organism = (
+            experiment["srr_1"]["status"],
+            experiment["srr_2"]["status"],
+            experiment["srr_3"]["status"],
         )
 
-        return control_organism_ready and experiment_organism_ready
+        return control_organism and experiment_organism
+
+    def is_all_file_download_converted(self, pipeline_id: str) -> bool:
+        result = self._get_pipeline_by_sra_state(
+            pipeline_id, SRAFileStatusEnum.CONVERTED.value
+        )
+
+        return True if result else False
+
+    def is_all_file_download_downloaded(self, pipeline_id: str) -> bool:
+        result = self._get_pipeline_by_sra_state(
+            pipeline_id, SRAFileStatusEnum.DOWNLOADED.value
+        )
+
+        return True if result else False
 
     def get_sra_files(self, pipeline_id: str) -> List[str]:
         pipeline = self.get(pipeline_id)
