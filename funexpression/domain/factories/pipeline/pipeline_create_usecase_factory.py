@@ -10,6 +10,5 @@ class PipelineCreateUseCaseFactory:
     @staticmethod
     def create():
         pipeline_repository = PipelineRepositoryMongo()
-        task = Task()
 
-        return PipelineCreateUseCase(task=task, pipeline_repository=pipeline_repository)
+        return PipelineCreateUseCase(pipeline_repository=pipeline_repository)

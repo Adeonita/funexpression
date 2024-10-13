@@ -1,56 +1,111 @@
 from domain.entities.pipeline import Pipeline
+from domain.usecases.base_usecase import BaseUseCase
+from ports.infrastructure.messaging.task_port import TaskPort
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
-from domain.entities.triplicate import SRAFileStatusEnum, SRAFile, Triplicate
+from infrastructure.celery import convert_sra_to_fasta_task, download_sra_task
+
+from domain.entities.triplicate import (
+    SRAFile,
+    Triplicate,
+    OrganinsGroupEnum,
+    SRAFileStatusEnum,
+)
 from domain.usecases.pipeline.input.pipeline_create_input import (
     PipelineCreateUseCaseInput,
 )
-from ports.infrastructure.messaging.task_port import TaskPort
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
 )
 
 
-class PipelineCreateUseCase:
+class PipelineCreateUseCase(BaseUseCase):
 
-    def __init__(self, pipeline_repository: PipelineRepositoryPort, task: TaskPort):
+    def __init__(
+        self,
+        pipeline_repository: PipelineRepositoryPort,
+    ):
         self.pipeline_repository = pipeline_repository
-        self.task = task
 
     def execute(self, input: PipelineCreateUseCaseInput):
         created_pipeline = self._find_pipeline(input)
 
         if created_pipeline:
             created_pipeline = Pipeline.from_json(created_pipeline)
-            if (
-                created_pipeline.stage == PipelineStageEnum.PENDING
-                and self.pipeline_repository.is_all_file_download_completed(
+            sra_files_download_completed = (
+                self.pipeline_repository.is_all_file_download_downloaded(
                     created_pipeline.id
                 )
-            ):
+            )
+
+            pipeline_sra_files_download_pending = (
+                created_pipeline.stage == PipelineStageEnum.PENDING
+                and not sra_files_download_completed
+            )
+
+            if pipeline_sra_files_download_pending:
+                return {
+                    "message": "Your pipeline is awaiting download the sra files, please wait a moment",
+                    "pipeline_stage": created_pipeline.stage.value,
+                }
+                # I will should be some thing?
+
+            pipeline_sra_files_downloaded = (
+                created_pipeline.stage == PipelineStageEnum.PENDING
+                and sra_files_download_completed
+            )
+
+            pipeline_sra_files_read_to_convert = (
+                created_pipeline.stage == PipelineStageEnum.DOWNLOADED
+                and sra_files_download_completed
+            )
+
+            if pipeline_sra_files_downloaded:
                 self.pipeline_repository.update_status(
                     created_pipeline.id, PipelineStageEnum.DOWNLOADED
                 )
-                # TODO: dispara o usecase de conversão via task
 
-            return {
-                "message": f"Your pipeline is already created, and the status is: {created_pipeline.stage.value}"
-            }
-        experiment_organism = Triplicate(
-            srr_1=SRAFile(
-                acession_number=input.experiment_organism.srr_acession_number_1,
-                status=SRAFileStatusEnum.PENDING,
-            ),
-            srr_2=SRAFile(
-                acession_number=input.experiment_organism.srr_acession_number_2,
-                status=SRAFileStatusEnum.PENDING,
-            ),
-            srr_3=SRAFile(
-                acession_number=input.experiment_organism.srr_acession_number_3,
-                status=SRAFileStatusEnum.PENDING,
-            ),
+                self._convert_transcriptomes(created_pipeline)
+
+                return {
+                    "message": f"Your pipeline is already created, and the sra files are awaiting was sent to conversion",
+                    "pipeline_stage": created_pipeline.stage.value,
+                }
+            # downloaded pipeline
+            elif pipeline_sra_files_read_to_convert:
+                self._convert_transcriptomes(created_pipeline)
+                return {
+                    "message": f"Your pipeline is already created, and are await to conversion.",
+                    "pipeline_stage": created_pipeline.stage.value,
+                }
+            # elif created_pipeline.stage == PipelineStageEnum.CONVERTED:
+            #     self._trimming_transcriptomes(created_pipeline)
+            # elif created_pipeline.stage == PipelineStageEnum.TRIMMED:
+            #     self._align_transcriptomes(created_pipeline)
+            # elif created_pipeline.stage == PipelineStageEnum.ALIGNED:
+            #     self._normalize_transcriptomes(created_pipeline)
+            # elif created_pipeline.stage == PipelineStageEnum.COUNTED:
+            #     self._differential_expression(created_pipeline)
+            # elif created_pipeline.stage == PipelineStageEnum.DIFFERENTIAL_EXPRESSION:
+            #     self._send_email(created_pipeline)
+
+        experiment_organism = self._get_experiment_organism(input)
+        control_organism = self._get_control_organism(input)
+
+        pipeline: Pipeline = self.pipeline_repository.create(
+            email=input.email,
+            run_id=input.run_id,
+            stage=PipelineStageEnum.PENDING,
+            experiment_organism=experiment_organism,
+            control_organism=control_organism,
+            reference_genome_acession_number=input.reference_genome_acession_number,
         )
 
-        control_organism = Triplicate(
+        self._download_transcriptomes(pipeline)
+
+        return pipeline
+
+    def _get_control_organism(self, input: PipelineCreateUseCaseInput):
+        return Triplicate(
             srr_1=SRAFile(
                 acession_number=input.control_organism.srr_acession_number_1,
                 status=SRAFileStatusEnum.PENDING,
@@ -65,29 +120,65 @@ class PipelineCreateUseCase:
             ),
         )
 
-        pipeline: Pipeline = self.pipeline_repository.create(
-            email=input.email,
-            run_id=input.run_id,
-            stage=PipelineStageEnum.PENDING,
-            experiment_organism=experiment_organism,
-            control_organism=control_organism,
-            reference_genome_acession_number=input.reference_genome_acession_number,
+    def _get_experiment_organism(self, input: PipelineCreateUseCaseInput):
+        return Triplicate(
+            srr_1=SRAFile(
+                acession_number=input.experiment_organism.srr_acession_number_1,
+                status=SRAFileStatusEnum.PENDING,
+            ),
+            srr_2=SRAFile(
+                acession_number=input.experiment_organism.srr_acession_number_2,
+                status=SRAFileStatusEnum.PENDING,
+            ),
+            srr_3=SRAFile(
+                acession_number=input.experiment_organism.srr_acession_number_3,
+                status=SRAFileStatusEnum.PENDING,
+            ),
         )
 
-        self._download_triplicate(experiment_organism, pipeline.id)
-        self._download_triplicate(control_organism, pipeline.id)
+    def _download_transcriptomes(self, pipeline: Pipeline):
+        self._download_triplicate(
+            pipeline.control_organism, pipeline.id, OrganinsGroupEnum.CONTROL
+        )
 
-        return pipeline
+        self._download_triplicate(
+            pipeline.experiment_organism, pipeline.id, OrganinsGroupEnum.EXPERIMENT
+        )
 
-    def _download_triplicate(self, tri: Triplicate, pipeline_id: str):
-        self._download_sra(tri.srr_1, pipeline_id)
-        self._download_sra(tri.srr_2, pipeline_id)
-        self._download_sra(tri.srr_3, pipeline_id)
+    def _download_triplicate(
+        self, tri: Triplicate, pipeline_id: str, organism_group: OrganinsGroupEnum
+    ):
+        self._download_sra(tri.srr_1, pipeline_id, organism_group)
+        self._download_sra(tri.srr_2, pipeline_id, organism_group)
+        self._download_sra(tri.srr_3, pipeline_id, organism_group)
 
-    def _download_sra(self, sra_file: SRAFile, pipeline_id: str):
-        self.task.sra_transcriptome_download.delay(
-            sra_id=sra_file.acession_number,
-            pipeline_id=pipeline_id,
+    def _download_sra(
+        self, sra_file: SRAFile, pipeline_id: str, organism_group: OrganinsGroupEnum
+    ):
+        sra_id = sra_file.acession_number
+
+        download_sra_task(sra_id, pipeline_id, organism_group)
+
+    def _convert_sra_to_fasta(
+        self, sra_file: SRAFile, pipeline_id: str, organism_group: str
+    ):
+        sra_id = sra_file.acession_number
+
+        convert_sra_to_fasta_task(sra_id, pipeline_id, organism_group)
+
+    def _convert_triplicate(
+        self, tri: Triplicate, pipeline_id: str, organism_group: str
+    ):
+        self._convert_sra_to_fasta(tri.srr_1, pipeline_id, organism_group)
+        self._convert_sra_to_fasta(tri.srr_2, pipeline_id, organism_group)
+        self._convert_sra_to_fasta(tri.srr_3, pipeline_id, organism_group)
+
+    def _convert_transcriptomes(self, pipeline: Pipeline):
+        self._convert_triplicate(
+            pipeline.experiment_organism, pipeline.id, OrganinsGroupEnum.EXPERIMENT
+        )
+        self._convert_triplicate(
+            pipeline.control_organism, pipeline.id, OrganinsGroupEnum.CONTROL
         )
 
     def _find_pipeline(self, input: PipelineCreateUseCaseInput):

@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI
 
-from application.helpers.helper import get_srr_list, get_user_name_by_email
+from application.helpers.helper import get_user_name_by_email
 from application.interfaces.expression_request_payload import ExpressionCalculateRequest
 
 from domain.factories.pipeline.pipeline_create_usecase_factory import (
