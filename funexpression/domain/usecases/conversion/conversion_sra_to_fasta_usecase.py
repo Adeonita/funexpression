@@ -1,4 +1,6 @@
 import os
+from domain.entities.triplicate import SRAFileStatusEnum
+from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from infrastructure.sra_tools.fasterq_dump_adapter import FasterqDumpAdapter
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
@@ -21,6 +23,25 @@ class ConversionSraToFastaUseCase:
         )
 
         self.fasterq_dump_adapter.dump_sra_to_fasta(sra_id, output_dir)
+
+        self.pipeline_repository.update_sra_file_status(
+            pipeline_id=pipeline_id,
+            sra_id=sra_id,
+            status=SRAFileStatusEnum.CONVERTED,
+        )
+
+        if self.pipeline_repository.is_all_file_download_converted(pipeline_id):
+            self.pipeline_repository.update_status(
+                pipeline_id=pipeline_id,
+                pipeline_stage=PipelineStageEnum.CONVERTED,
+            )
+            print("Converted step done")
+
+            print("Sending to the trimming queue...")
+            # TODO: Implement trimming task
+            # convert_sra_to_fasta_task(sra_id, pipeline_id, organism_group)
+
+            print("Message sent to the trimming queue!")
 
     def _create_outdir_if_not_exist(
         self, pipeline_id: str, group: str, acession_number: str
