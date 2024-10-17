@@ -60,5 +60,25 @@ COPY --from=builder ${SRATOOLKIT} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=sra_to_fasta_conversion", "--concurrency=3"]
 
-#TODO: add trimming worker
-# ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=trimming"] #TODO: trimming queue
+#the image is used to run worker for trimming fasta files
+
+# the image is used to run worker for conversion sra to fasta files
+FROM python:3.11-slim-buster AS trimming_worker
+
+RUN apt-get update
+RUN apt-get install -y wget unzip
+RUN apt-get install -y openjdk-11-jre-headless
+
+RUN wget http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.39.zip
+RUN unzip Trimmomatic-0.39.zip
+RUN mv Trimmomatic-0.39 trimmomatic
+
+ENV VIRTUAL_ENV=/app/.venv \
+    JAVA_HOME=/usr/lib/jvm/openjdk-11-jre-headless/jre/bin/java \
+    PATH="/app/.venv/bin:/app/java/bin:$PATH"
+
+WORKDIR /funexpression
+
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+
+ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=trimming", "--concurrency=3"]

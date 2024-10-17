@@ -61,6 +61,22 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
+  trimming_worker:
+    platform: linux/amd64
+    container_name: trimming_worker
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: trimming_worker
+    depends_on:
+      - web
+    volumes:
+      - ./funexpression:/funexpression
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=pass
+    networks:
+      - backend
   mongo:
     image: mongo
     container_name: mongo-database
