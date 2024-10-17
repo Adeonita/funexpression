@@ -1,9 +1,6 @@
 from domain.usecases.base_usecase import BaseUseCase
 from domain.entities.triplicate import SRAFileStatusEnum
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
-from domain.usecases.conversion.input.conversion_sra_to_fasta_usecase_input import (
-    ConversionSraToFastaUseCaseInput,
-)
 from ports.infrastructure.bio_database.geo_adapter_port import GeoAdapterPort
 from domain.usecases.transcriptome.input.transcriptome_download_usecase_input import (
     TranscriptomeDownloadUseCaseInput,

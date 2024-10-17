@@ -6,7 +6,7 @@ from domain.factories.transcriptome.transcriptome_download_usecase_factory impor
     TranscriptomeDownloadUseCaseFactory,
 )
 from domain.usecases.base_usecase import BaseUseCase
-from domain.usecases.conversion.input.conversion_sra_to_fasta_usecase_input import (
+from domain.usecases.transcriptome.input.conversion_sra_to_fasta_usecase_input import (
     ConversionSraToFastaUseCaseInput,
 )
 from domain.usecases.transcriptome.input.transcriptome_download_usecase_input import (

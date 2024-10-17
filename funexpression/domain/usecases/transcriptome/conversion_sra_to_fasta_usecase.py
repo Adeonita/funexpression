@@ -38,6 +38,16 @@ class ConversionSraToFastaUseCase:
             print("Converted step done")
 
             print("Sending to the trimming queue...")
+
+            trimming_input = {
+                "pipeline_id": pipeline_id,
+                "organism_group": organism_group,
+                "trimming_type": "SE",
+                "input_path": f"pipelines/{pipeline_id}/CONVERTED/{organism_group}{sra_id}/{sra_id}.fastq",
+                "output_path": f"pipelines/{pipeline_id}/TRIMMED/{organism_group}/{sra_id}.fq.gz",
+                #  pipelines/670c3064f3fcd22056f49445/CONTROL/SRR10042980/SRR10042980.fastq
+            }
+
             # TODO: Implement trimming task
             # convert_sra_to_fasta_task(sra_id, pipeline_id, organism_group)
 

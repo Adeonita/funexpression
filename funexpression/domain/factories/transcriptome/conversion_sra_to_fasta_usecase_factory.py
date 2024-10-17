@@ -1,4 +1,4 @@
-from domain.usecases.conversion.conversion_sra_to_fasta_usecase import (
+from domain.usecases.transcriptome.conversion_sra_to_fasta_usecase import (
     ConversionSraToFastaUseCase,
 )
 from infrastructure.repositories.pipeline_repository_mongo import (
