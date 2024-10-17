@@ -19,7 +19,7 @@ class ConversionSraToFastaUseCase:
     def execute(self, sra_id, pipeline_id, organism_group):
 
         output_dir = self._create_outdir_if_not_exist(
-            pipeline_id, organism_group, sra_id
+            pipeline_id, "CONVERTED", organism_group, sra_id
         )
 
         self.fasterq_dump_adapter.dump_sra_to_fasta(sra_id, output_dir)
@@ -44,11 +44,14 @@ class ConversionSraToFastaUseCase:
             print("Message sent to the trimming queue!")
 
     def _create_outdir_if_not_exist(
-        self, pipeline_id: str, group: str, acession_number: str
+        self, pipeline_id: str, step: str, group: str, acession_number: str
     ):
-        temp_files = os.path.join("pipelines/", pipeline_id, group, acession_number)
+        temp_files = os.path.join(
+            "pipelines/", pipeline_id, step, group, acession_number
+        )
 
         if not os.path.exists(temp_files):
             os.makedirs(temp_files)
+            return temp_files
 
-        return temp_files
+        return None
