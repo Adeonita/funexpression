@@ -1,6 +1,7 @@
 import os
 from domain.entities.triplicate import SRAFileStatusEnum
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
+from infrastructure.celery import trimming_transcriptome_task
 from infrastructure.sra_tools.fasterq_dump_adapter import FasterqDumpAdapter
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
@@ -30,28 +31,33 @@ class ConversionSraToFastaUseCase:
             status=SRAFileStatusEnum.CONVERTED,
         )
 
+        print("Sending to the trimming queue...")
+
+        paths = self._get_trimming_paths(pipeline_id, organism_group, sra_id)
+
+        trimming_transcriptome_task(
+            pipeline_id=pipeline_id,
+            sra_id=sra_id,
+            organism_group=organism_group,
+            trimming_type="SE",
+            input_path=paths["input"],
+            output_path=paths["output"],
+        )
+
+        print("Message sent to the trimming queue!")
+
         if self.pipeline_repository.is_all_file_download_converted(pipeline_id):
             self.pipeline_repository.update_status(
                 pipeline_id=pipeline_id,
                 pipeline_stage=PipelineStageEnum.CONVERTED,
             )
-            print("Converted step done")
+            print("Converted step done!")
 
-            print("Sending to the trimming queue...")
-
-            trimming_input = {
-                "pipeline_id": pipeline_id,
-                "organism_group": organism_group,
-                "trimming_type": "SE",
-                "input_path": f"pipelines/{pipeline_id}/CONVERTED/{organism_group}{sra_id}/{sra_id}.fastq",
-                "output_path": f"pipelines/{pipeline_id}/TRIMMED/{organism_group}/{sra_id}.fq.gz",
-                #  pipelines/670c3064f3fcd22056f49445/CONTROL/SRR10042980/SRR10042980.fastq
-            }
-
-            # TODO: Implement trimming task
-            # convert_sra_to_fasta_task(sra_id, pipeline_id, organism_group)
-
-            print("Message sent to the trimming queue!")
+    def _get_trimming_paths(self, pipeline_id, organism_group, sra_id):
+        return {
+            "input": f"pipelines/{pipeline_id}/CONVERTED/{organism_group}{sra_id}/{sra_id}.fastq",
+            "output": f"pipelines/{pipeline_id}/TRIMMED/{organism_group}/{sra_id}.fq.gz",
+        }
 
     def _create_outdir_if_not_exist(
         self, pipeline_id: str, step: str, group: str, acession_number: str
