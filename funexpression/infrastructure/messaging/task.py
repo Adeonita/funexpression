@@ -12,6 +12,9 @@ from domain.usecases.transcriptome.input.conversion_sra_to_fasta_usecase_input i
 from domain.usecases.transcriptome.input.transcriptome_download_usecase_input import (
     TranscriptomeDownloadUseCaseInput,
 )
+from domain.usecases.transcriptome.input.trimming_transcriptome_usecase_input import (
+    TrimmingTypeEnum,
+)
 from infrastructure.celery import app
 from ports.infrastructure.messaging.task_port import TaskPort
 
@@ -45,3 +48,15 @@ class Task(TaskPort):
             conversion_usecase.execute(sra_id, pipeline_id, organism_group)
         except Exception as e:
             return f"there was an error when downloading sra sequence {e}"
+
+    @app.task(bind=True, queue="trimming_transcriptome")
+    def trimming_transcriptome(
+        self,
+        pipeline_id: str,
+        organism_group: str,
+        trimming_type: TrimmingTypeEnum,
+        input_path: str,
+        output_path: str,
+    ):
+        pass
+        # TODO: implementar o trimming_transcriptome
