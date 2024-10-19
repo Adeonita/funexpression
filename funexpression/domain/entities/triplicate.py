@@ -6,6 +6,7 @@ class SRAFileStatusEnum(StrEnum):
     PENDING = "PENDING"
     DOWNLOADED = "DOWNLOADED"
     CONVERTED = "CONVERTED"
+    TRIMMED = "TRIMMED"
 
 
 class OrganinsGroupEnum(StrEnum):

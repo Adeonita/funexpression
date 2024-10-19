@@ -1,12 +1,5 @@
 from celery import Celery
 
-from domain.usecases.conversion.input.conversion_sra_to_fasta_usecase_input import (
-    ConversionSraToFastaUseCaseInput,
-)
-from domain.usecases.transcriptome.input.transcriptome_download_usecase_input import (
-    TranscriptomeDownloadUseCaseInput,
-)
-
 app = Celery(
     "geo",
     broker="pyamqp://admin:pass@rabbitmq:5672//",
@@ -30,4 +23,21 @@ def download_sra_task(sra_id, pipeline_id, organism_group):
         "infrastructure.messaging.task.sra_transcriptome_download",
         args=(sra_id, pipeline_id, organism_group),
         queue="geo_sra_download",
+    )
+
+
+def trimming_transcriptome_task(
+    pipeline_id, sra_id, organism_group, trimming_type, input_path, output_path
+):
+    app.send_task(
+        "infrastructure.messaging.task.trimming_transcriptome",
+        args=(
+            pipeline_id,
+            sra_id,
+            organism_group,
+            trimming_type,
+            input_path,
+            output_path,
+        ),
+        queue="trimming_transcriptome",
     )
