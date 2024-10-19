@@ -35,5 +35,8 @@ class PipelineRepositoryPort(Protocol):
     def is_all_file_download_converted(self, pipeline_id: str) -> bool:
         pass
 
+    def is_all_sra_files_trimmed(self, pipeline_id: str) -> bool:
+        pass
+
     def get_sra_files(self, pipeline_id: str) -> dict:
         pass
