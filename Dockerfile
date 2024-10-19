@@ -61,8 +61,6 @@ COPY --from=builder ${SRATOOLKIT} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=sra_to_fasta_conversion", "--concurrency=3"]
 
 #the image is used to run worker for trimming fasta files
-
-# the image is used to run worker for conversion sra to fasta files
 FROM python:3.11-slim-buster AS trimming_worker
 
 RUN apt-get update
