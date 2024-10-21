@@ -1,8 +1,13 @@
+from domain.entities.genome import Genome, GenomeFiles, GenomeStatusEnum
 from domain.entities.pipeline import Pipeline
 from domain.usecases.base_usecase import BaseUseCase
 from ports.infrastructure.messaging.task_port import TaskPort
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
-from infrastructure.celery import convert_sra_to_fasta_task, download_sra_task
+from infrastructure.celery import (
+    convert_sra_to_fasta_task,
+    download_genome_task,
+    download_sra_task,
+)
 
 from domain.entities.triplicate import (
     SRAFile,
@@ -36,6 +41,8 @@ class PipelineCreateUseCase(BaseUseCase):
                     created_pipeline.id
                 )
             )
+
+            print(f"Downloads completos: {sra_files_download_completed}")
 
             pipeline_sra_files_download_pending = (
                 created_pipeline.stage == PipelineStageEnum.PENDING
@@ -90,6 +97,7 @@ class PipelineCreateUseCase(BaseUseCase):
 
         experiment_organism = self._get_experiment_organism(input)
         control_organism = self._get_control_organism(input)
+        reference_genome = self._get_reference_genome(input)
 
         pipeline: Pipeline = self.pipeline_repository.create(
             email=input.email,
@@ -97,12 +105,22 @@ class PipelineCreateUseCase(BaseUseCase):
             stage=PipelineStageEnum.PENDING,
             experiment_organism=experiment_organism,
             control_organism=control_organism,
-            reference_genome_acession_number=input.reference_genome_acession_number,
+            reference_genome=reference_genome,
         )
 
         self._download_transcriptomes(pipeline)
 
         return pipeline
+
+    def _get_reference_genome(self, input: PipelineCreateUseCaseInput) -> Genome:
+        return Genome(
+            acession_number=input.reference_genome_acession_number,
+            state=GenomeStatusEnum.PENDING,
+            genome_files=GenomeFiles(
+                gft=GenomeStatusEnum.PENDING,
+                fasta=GenomeStatusEnum.PENDING,
+            ),
+        )
 
     def _get_control_organism(self, input: PipelineCreateUseCaseInput):
         return Triplicate(
@@ -134,6 +152,11 @@ class PipelineCreateUseCase(BaseUseCase):
                 acession_number=input.experiment_organism.srr_acession_number_3,
                 status=SRAFileStatusEnum.PENDING,
             ),
+        )
+
+    def _download_genome(self, pipeline: Pipeline):
+        download_genome_task(
+            genome_id=pipeline.reference_genome.acession_number, pipeline_id=pipeline.id
         )
 
     def _download_transcriptomes(self, pipeline: Pipeline):
