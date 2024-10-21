@@ -1,4 +1,6 @@
 from typing import List, Protocol
+from application.interfaces.expression_request_payload import Triplicate
+from domain.entities.genome import Genome, GenomeFilesEnum, GenomeStatusEnum
 from domain.entities.pipeline import Pipeline
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from domain.entities.triplicate import SRAFileStatusEnum
@@ -6,7 +8,15 @@ from domain.entities.triplicate import SRAFileStatusEnum
 
 class PipelineRepositoryPort(Protocol):
 
-    def create(self, email: str, run_id: str, stage: PipelineStageEnum) -> Pipeline:
+    def create(
+        self,
+        email: str,
+        run_id: str,
+        stage: PipelineStageEnum,
+        control_organism: Triplicate,
+        experiment_organism: Triplicate,
+        reference_genome_acession_number: Genome,
+    ) -> Pipeline:
         pass
 
     def get(self, pipeline_id: str) -> Pipeline:
@@ -18,6 +28,20 @@ class PipelineRepositoryPort(Protocol):
         pass
 
     def update_status(self, pipeline_id: int, pipeline_stage: PipelineStageEnum):
+        pass
+
+    def update_genome_file_status(
+        self,
+        pipeline_id: int,
+        genome_id: str,
+        file_status: GenomeStatusEnum,
+        file: GenomeFilesEnum,
+    ):
+        pass
+
+    def update_genome_reference_status(
+        self, pipeline_id: str, genome_id: str, status: GenomeStatusEnum
+    ):
         pass
 
     def find_pipeline(
