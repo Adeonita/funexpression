@@ -1,5 +1,6 @@
 from typing import List
 from bson import ObjectId
+from domain.entities.genome import Genome, GenomeFilesEnum, GenomeStatusEnum
 from domain.entities.pipeline import Pipeline
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from domain.entities.triplicate import SRAFileStatusEnum, Triplicate
@@ -22,7 +23,7 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
         stage: PipelineStageEnum,
         control_organism: Triplicate,
         experiment_organism: Triplicate,
-        reference_genome_acession_number: str,
+        reference_genome: Genome,
     ) -> Pipeline:
         pipeline = Pipeline(
             email=email,
@@ -30,7 +31,7 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
             stage=stage,
             control_organism=control_organism,
             experiment_organism=experiment_organism,
-            reference_genome_acession_number=reference_genome_acession_number,
+            reference_genome=reference_genome,
         )
 
         pipeline_id = self.database.create("pipelines", pipeline.to_json())
@@ -106,6 +107,60 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
         except Exception as e:
             print(f"update sra file status error: --> {str(e)}")
 
+    def update_genome_file_status(
+        self,
+        pipeline_id: int,
+        genome_id: str,
+        status: GenomeStatusEnum,
+        file: GenomeFilesEnum,
+    ):
+        query = {
+            "_id": ObjectId(pipeline_id),
+            "reference_genome.acession_number": genome_id,
+        }
+
+        try:
+            pipeline = self.database.find("pipelines", query)
+
+            if not pipeline:
+                raise Exception("Pipeline not found")
+
+            if file == GenomeFilesEnum.GFT:
+                self.database.updateById(
+                    pipeline_id, {"reference_genome.genome_files.gtf": status}
+                )
+                return
+            elif file == GenomeFilesEnum.FASTA:
+                self.database.updateById(
+                    pipeline_id, {"reference_genome.genome_files.fasta": status}
+                )
+                return
+        except Exception as e:
+            print(f"Ocurre an error when try update genome file: --> {str(e)}")
+
+    def update_genome_reference_status(
+        self, pipeline_id: str, genome_id: str, status: GenomeStatusEnum
+    ):
+        query = {
+            "_id": ObjectId(pipeline_id),
+            "reference_genome.acession_number": genome_id,
+        }
+
+        try:
+            pipeline = self.database.find("pipelines", query)
+
+            if not pipeline:
+                raise Exception("Pipeline not found")
+
+            self.database.updateById(pipeline_id, {"reference_genome.status": status})
+        except Exception as e:
+            print(
+                f"Ocurre an error when try update genome reference status --> {str(e)}"
+            )
+
+    def get_pipeline_by_genome_id(self, pipeline_id: str, genome_id: str):
+        pass
+
     def find_pipeline(
         self,
         email: str,
@@ -121,7 +176,7 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
             "experiment_organism.srr_1.acession_number": experiment_organism[0],
             "experiment_organism.srr_2.acession_number": experiment_organism[1],
             "experiment_organism.srr_3.acession_number": experiment_organism[2],
-            "reference_genome_acession_number": reference_genome_acession_number,
+            "reference_genome.acession_number": reference_genome_acession_number,
         }
 
         pipelines = self.database.find("pipelines", query)
@@ -164,6 +219,22 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
 
         return control_organism and experiment_organism
 
+    def _get_pipeline_by_genome_state(
+        self, pipeline_id: str, genome_status: GenomeStatusEnum
+    ):
+
+        query = {
+            "_id": ObjectId(pipeline_id),
+            "reference_genome.status": genome_status,
+        }
+
+        pipeline = self.database.find("pipelines", query)
+
+        if not pipeline:
+            return False
+
+        return pipeline
+
     def is_all_file_download_converted(self, pipeline_id: str) -> bool:
         result = self._get_pipeline_by_sra_state(
             pipeline_id, SRAFileStatusEnum.CONVERTED.value
@@ -172,11 +243,15 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
         return True if result else False
 
     def is_all_file_download_downloaded(self, pipeline_id: str) -> bool:
-        result = self._get_pipeline_by_sra_state(
+        sra_result = self._get_pipeline_by_sra_state(
             pipeline_id, SRAFileStatusEnum.DOWNLOADED.value
         )
 
-        return True if result else False
+        genome_result = self._get_pipeline_by_genome_state(
+            pipeline_id, SRAFileStatusEnum.DOWNLOADED
+        )
+
+        return True if (sra_result and genome_result) else False
 
     def is_all_sra_files_trimmed(self, pipeline_id: str) -> bool:
         result = self._get_pipeline_by_sra_state(
