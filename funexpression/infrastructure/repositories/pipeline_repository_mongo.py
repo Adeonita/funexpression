@@ -111,7 +111,7 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
         self,
         pipeline_id: int,
         genome_id: str,
-        status: GenomeStatusEnum,
+        file_status: GenomeStatusEnum,
         file: GenomeFilesEnum,
     ):
         query = {
@@ -125,14 +125,14 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
             if not pipeline:
                 raise Exception("Pipeline not found")
 
-            if file == GenomeFilesEnum.GFT:
+            if file == GenomeFilesEnum.GTF:
                 self.database.updateById(
-                    pipeline_id, {"reference_genome.genome_files.gtf": status}
+                    pipeline_id, {"reference_genome.genome_files.gtf": file_status}
                 )
                 return
             elif file == GenomeFilesEnum.FASTA:
                 self.database.updateById(
-                    pipeline_id, {"reference_genome.genome_files.fasta": status}
+                    pipeline_id, {"reference_genome.genome_files.fasta": file_status}
                 )
                 return
         except Exception as e:
