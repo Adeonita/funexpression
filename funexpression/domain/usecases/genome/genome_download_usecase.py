@@ -27,18 +27,19 @@ class GenomeDownloadUseCase(BaseUseCase):
 
         print(f"Processing download for {genome_id}")
 
-        gft_genome = self.genbank_adapter.get_gft_genome_from_ncbi(genome_id=genome_id)
-        fasta_genome = self.genbank_adapter.get_fasta_genome_from_ncbi(
-            genome_id=genome_id
-        )
-        is_read_genomes_files = gft_genome and fasta_genome
+        downloaded = self.genbank_adapter.get_gtf_and_fasta_genome_from_ncbi(genome_id)
 
-        if gft_genome:
+        gtf_genome = downloaded.get("gtf_path")
+        fasta_genome = downloaded.get("fasta_path")
+
+        is_read_genomes_files = gtf_genome and fasta_genome
+
+        if gtf_genome:
             self.pipeline_repository.update_genome_file_status(
                 pipeline_id=pipeline_id,
                 genome_id=genome_id,
                 file_status=GenomeStatusEnum.DOWNLOADED,
-                file=GenomeFilesEnum.GFT,
+                file=GenomeFilesEnum.GTF,
             )
 
         if fasta_genome:
