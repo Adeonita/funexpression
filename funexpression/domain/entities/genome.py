@@ -8,13 +8,13 @@ class GenomeStatusEnum(StrEnum):
 
 
 class GenomeFilesEnum(StrEnum):
-    GFT = "GFT"
+    GTF = "GTF"
     FASTA = "FASTA"
 
 
 @dataclass
 class GenomeFiles:
-    gft: GenomeStatusEnum
+    gtf: GenomeStatusEnum
     fasta: GenomeStatusEnum
 
 

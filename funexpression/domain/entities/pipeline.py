@@ -53,7 +53,7 @@ class Pipeline:
                 "acession_number": self.reference_genome.acession_number,
                 "status": self.reference_genome.state.value,
                 "genome_files": {
-                    "gft": self.reference_genome.genome_files.gft.value,
+                    "gtf": self.reference_genome.genome_files.gtf.value,
                     "fasta": self.reference_genome.genome_files.fasta.value,
                 },
             },
@@ -122,8 +122,8 @@ class Pipeline:
                 acession_number=json["reference_genome"]["acession_number"],
                 state=GenomeStatusEnum[json["reference_genome"]["status"]],
                 genome_files=GenomeFiles(
-                    gft=GenomeStatusEnum[
-                        json["reference_genome"]["genome_files"]["gft"]
+                    gtf=GenomeStatusEnum[
+                        json["reference_genome"]["genome_files"]["gtf"]
                     ],
                     fasta=GenomeStatusEnum[
                         json["reference_genome"]["genome_files"]["fasta"]
