@@ -51,7 +51,7 @@ class Task(TaskPort):
         # except Exception as e:
         #     return f"there was an error when downloading sra sequence {e}"
 
-    @app.task(bind=True, queue="genome_download")
+    @app.task(bind=True, queue="genbank_ncbi_download")
     def genome_download(self, genome_id: str, pipeline_id: str):
         try:
             genome_download_usecase = GenomeDownloadUseCaseFactory.create()

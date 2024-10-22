@@ -30,7 +30,7 @@ def download_genome_task(genome_id: str, pipeline_id: str):
     app.send_task(
         "infrastructure.messaging.task.genome_download",
         args=(genome_id, pipeline_id),
-        queue="genome_download",
+        queue="genbank_ncbi_download",
     )
 
 
