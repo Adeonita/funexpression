@@ -266,17 +266,11 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
         if not pipeline:
             raise Exception("Pipeline not found")
 
-        result = {
-            "control": [
-                pipeline.control_organism.srr_1.acession_number,
-                pipeline.control_organism.srr_2.acession_number,
-                pipeline.control_organism.srr_3.acession_number,
-            ],
-            "experiment": [
-                pipeline.experiment_organism.srr_1.acession_number,
-                pipeline.experiment_organism.srr_2.acession_number,
-                pipeline.experiment_organism.srr_3.acession_number,
-            ],
-        }
-
-        return result
+        return [
+            [pipeline.control_organism.srr_1.acession_number, "control"],
+            [pipeline.control_organism.srr_2.acession_number, "control"],
+            [pipeline.control_organism.srr_3.acession_number, "control"],
+            [pipeline.experiment_organism.srr_1.acession_number, "experiment"],
+            [pipeline.experiment_organism.srr_2.acession_number, "experiment"],
+            [pipeline.experiment_organism.srr_3.acession_number, "experiment"],
+        ]
