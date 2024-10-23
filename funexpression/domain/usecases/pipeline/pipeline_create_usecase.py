@@ -66,7 +66,7 @@ class PipelineCreateUseCase(BaseUseCase):
                 and sra_files_download_completed
             )
 
-            if pipeline_sra_files_downloaded:
+            if pipeline_sra_files_downloaded:  # mudar nome
                 self.pipeline_repository.update_status(
                     created_pipeline.id, PipelineStageEnum.DOWNLOADED
                 )
@@ -108,7 +108,8 @@ class PipelineCreateUseCase(BaseUseCase):
             reference_genome=reference_genome,
         )
 
-        self._download_transcriptomes(pipeline)
+        # self._download_transcriptomes(pipeline)
+        self._download_genome_and_transcriptome(pipeline)
 
         return pipeline
 
@@ -117,7 +118,7 @@ class PipelineCreateUseCase(BaseUseCase):
             acession_number=input.reference_genome_acession_number,
             state=GenomeStatusEnum.PENDING,
             genome_files=GenomeFiles(
-                gft=GenomeStatusEnum.PENDING,
+                gtf=GenomeStatusEnum.PENDING,
                 fasta=GenomeStatusEnum.PENDING,
             ),
         )
@@ -153,6 +154,12 @@ class PipelineCreateUseCase(BaseUseCase):
                 status=SRAFileStatusEnum.PENDING,
             ),
         )
+
+    def _download_genome_and_transcriptome(self, pipeline: Pipeline):
+        self._download_genome(pipeline)
+        self._download_transcriptomes(pipeline)
+
+        return
 
     def _download_genome(self, pipeline: Pipeline):
         download_genome_task(
@@ -220,4 +227,78 @@ class PipelineCreateUseCase(BaseUseCase):
             reference_genome_acession_number=input.reference_genome_acession_number,
         )
 
-        return pipelines[0] if len(pipelines) > 0 else None
+        if len(pipelines) > 0:
+            pipeline = pipelines[0]
+
+            return Pipeline(
+                id=str(pipeline["_id"]),
+                run_id=pipeline["run_id"],
+                email=pipeline["email"],
+                stage=PipelineStageEnum(pipeline["stage"]),
+                control_organism=Triplicate(
+                    srr_1=SRAFile(
+                        acession_number=pipeline["control_organism"]["srr_1"][
+                            "acession_number"
+                        ],
+                        status=SRAFileStatusEnum[
+                            pipeline["control_organism"]["srr_1"]["status"]
+                        ],
+                    ),
+                    srr_2=SRAFile(
+                        acession_number=pipeline["control_organism"]["srr_2"][
+                            "acession_number"
+                        ],
+                        status=SRAFileStatusEnum[
+                            pipeline["control_organism"]["srr_2"]["status"]
+                        ],
+                    ),
+                    srr_3=SRAFile(
+                        acession_number=pipeline["control_organism"]["srr_3"][
+                            "acession_number"
+                        ],
+                        status=SRAFileStatusEnum[
+                            pipeline["control_organism"]["srr_3"]["status"]
+                        ],
+                    ),
+                ),
+                experiment_organism=Triplicate(
+                    srr_1=SRAFile(
+                        acession_number=pipeline["experiment_organism"]["srr_1"][
+                            "acession_number"
+                        ],
+                        status=SRAFileStatusEnum[
+                            pipeline["experiment_organism"]["srr_1"]["status"]
+                        ],
+                    ),
+                    srr_2=SRAFile(
+                        acession_number=pipeline["experiment_organism"]["srr_2"][
+                            "acession_number"
+                        ],
+                        status=SRAFileStatusEnum[
+                            pipeline["experiment_organism"]["srr_2"]["status"]
+                        ],
+                    ),
+                    srr_3=SRAFile(
+                        acession_number=pipeline["experiment_organism"]["srr_3"][
+                            "acession_number"
+                        ],
+                        status=SRAFileStatusEnum[
+                            pipeline["experiment_organism"]["srr_3"]["status"]
+                        ],
+                    ),
+                ),
+                reference_genome=Genome(
+                    acession_number=pipeline["reference_genome"]["acession_number"],
+                    state=GenomeStatusEnum[pipeline["reference_genome"]["status"]],
+                    genome_files=GenomeFiles(
+                        gtf=GenomeStatusEnum[
+                            pipeline["reference_genome"]["genome_files"]["gtf"]
+                        ],
+                        fasta=GenomeStatusEnum[
+                            pipeline["reference_genome"]["genome_files"]["fasta"]
+                        ],
+                    ),
+                ),
+            )
+
+        return None
