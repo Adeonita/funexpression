@@ -26,6 +26,14 @@ def download_sra_task(sra_id, pipeline_id, organism_group):
     )
 
 
+def download_genome_task(genome_id: str, pipeline_id: str):
+    app.send_task(
+        "infrastructure.messaging.task.genome_download",
+        args=(genome_id, pipeline_id),
+        queue="genbank_ncbi_download",
+    )
+
+
 def trimming_transcriptome_task(
     pipeline_id, sra_id, organism_group, trimming_type, input_path, output_path
 ):

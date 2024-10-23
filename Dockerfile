@@ -80,3 +80,24 @@ WORKDIR /funexpression
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=trimming_transcriptome", "--concurrency=3"]
+
+
+# the image is used to run worker for downloading genome files
+FROM python:3.11-slim-buster AS genome_download_worker
+
+RUN apt-get -y update
+RUN apt-get install -y wget unzip
+
+RUN wget https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/v2/linux-amd64/datasets
+RUN mv datasets /usr/local/bin
+RUN chmod +x /usr/local/bin/datasets
+
+
+ENV VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:/app:$PATH"
+
+WORKDIR /funexpression
+
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+
+ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=genbank_ncbi_download", "--concurrency=3"]

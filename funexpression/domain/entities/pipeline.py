@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
+from domain.entities.genome import Genome, GenomeFiles, GenomeStatusEnum
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from domain.entities.triplicate import SRAFile, SRAFileStatusEnum, Triplicate
 
@@ -11,7 +12,7 @@ class Pipeline:
     stage: PipelineStageEnum
     control_organism: Triplicate
     experiment_organism: Triplicate
-    reference_genome_acession_number: str
+    reference_genome: Genome
     id: Optional[int] = None
 
     def to_json(self):
@@ -48,7 +49,14 @@ class Pipeline:
                     "status": self.experiment_organism.srr_3.status.value,
                 },
             },
-            "reference_genome_acession_number": self.reference_genome_acession_number,
+            "reference_genome": {
+                "acession_number": self.reference_genome.acession_number,
+                "status": self.reference_genome.state.value,
+                "genome_files": {
+                    "gtf": self.reference_genome.genome_files.gtf.value,
+                    "fasta": self.reference_genome.genome_files.fasta.value,
+                },
+            },
         }
 
     @staticmethod
@@ -110,5 +118,16 @@ class Pipeline:
                     ],
                 ),
             ),
-            reference_genome_acession_number=json["reference_genome_acession_number"],
+            reference_genome=Genome(
+                acession_number=json["reference_genome"]["acession_number"],
+                state=GenomeStatusEnum[json["reference_genome"]["status"]],
+                genome_files=GenomeFiles(
+                    gtf=GenomeStatusEnum[
+                        json["reference_genome"]["genome_files"]["gtf"]
+                    ],
+                    fasta=GenomeStatusEnum[
+                        json["reference_genome"]["genome_files"]["fasta"]
+                    ],
+                ),
+            ),
         )
