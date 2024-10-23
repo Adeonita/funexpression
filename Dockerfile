@@ -82,7 +82,7 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=trimming_transcriptome", "--concurrency=3"]
 
 
-# the image is used to run worker for downloading sra files
+# the image is used to run worker for downloading genome files
 FROM python:3.11-slim-buster AS genome_download_worker
 
 RUN apt-get -y update
