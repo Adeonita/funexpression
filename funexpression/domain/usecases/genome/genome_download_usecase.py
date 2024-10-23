@@ -1,6 +1,7 @@
 from domain.usecases.base_usecase import BaseUseCase
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from domain.entities.genome import GenomeFilesEnum, GenomeStatusEnum
+from domain.usecases.helpers.helpers import send_sra_to_conversion_queue_in_bulk
 from ports.infrastructure.bio_database.genbank_port import GenBankPort
 
 from domain.usecases.genome.input.genome_downlaod_usecase_input import (
@@ -66,6 +67,8 @@ class GenomeDownloadUseCase(BaseUseCase):
 
             print("Sending to the conversion queue...")
 
-            # convert_sra_to_fasta_task(sra_id, pipeline_id, organism_group)
+            sra_files = self.pipeline_repository.get_sra_files(input.pipeline_id)
+
+            send_sra_to_conversion_queue_in_bulk(sra_files, pipeline_id)
 
             print("Message sent to the conversion queue!")
