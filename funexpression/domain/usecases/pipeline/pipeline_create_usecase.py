@@ -42,8 +42,6 @@ class PipelineCreateUseCase(BaseUseCase):
                 )
             )
 
-            print(f"Downloads completos: {sra_files_download_completed}")
-
             pipeline_sra_files_download_pending = (
                 created_pipeline.stage == PipelineStageEnum.PENDING
                 and not sra_files_download_completed
@@ -56,7 +54,7 @@ class PipelineCreateUseCase(BaseUseCase):
                 }
                 # I will should be some thing?
 
-            pipeline_sra_files_downloaded = (
+            pipeline_files_downloaded = (
                 created_pipeline.stage == PipelineStageEnum.PENDING
                 and sra_files_download_completed
             )
@@ -66,7 +64,7 @@ class PipelineCreateUseCase(BaseUseCase):
                 and sra_files_download_completed
             )
 
-            if pipeline_sra_files_downloaded:  # mudar nome
+            if pipeline_files_downloaded:
                 self.pipeline_repository.update_status(
                     created_pipeline.id, PipelineStageEnum.DOWNLOADED
                 )
