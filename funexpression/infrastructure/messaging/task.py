@@ -38,7 +38,6 @@ class Task(TaskPort):
 
         print(f"Aqui é o sra_id: {sra_id}")
         print(f"Aqui é o pipeline_id: {pipeline_id}")
-        # TODO: testar o fluxo completo englobando a realizacao do download novamente (remover o download existente)
         # try:
         #     transcriptome_download_usecase = (
         #         TranscriptomeDownloadUseCaseFactory.create()
