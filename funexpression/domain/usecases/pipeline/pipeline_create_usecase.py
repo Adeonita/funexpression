@@ -1,7 +1,6 @@
 from domain.entities.genome import Genome, GenomeFiles, GenomeStatusEnum
 from domain.entities.pipeline import Pipeline
 from domain.usecases.base_usecase import BaseUseCase
-from ports.infrastructure.messaging.task_port import TaskPort
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from infrastructure.celery import (
     convert_sra_to_fasta_task,
