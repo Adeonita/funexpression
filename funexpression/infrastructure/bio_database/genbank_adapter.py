@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import subprocess
@@ -7,7 +8,7 @@ from ports.infrastructure.bio_database.genbank_port import GenBankPort
 class GenBankAdapter(GenBankPort):
 
     def _download_genome_files(self, genome_id: str, folder_name: str):
-        cmd = f"datasets download genome accession {genome_id} --include gtf,protein --filename {folder_name}.zip"
+        cmd = f"datasets download genome accession {genome_id} --include gtf,genome --filename {folder_name}.zip"
 
         subprocess.run(cmd, shell=True)
 
@@ -29,38 +30,69 @@ class GenBankAdapter(GenBankPort):
 
         if is_recursive:
             cmd_remove_trash = f"rm -rf {trash_path}{extension}"
-            print(f"if cmd {cmd_remove_trash}")
         else:
             cmd_remove_trash = f"rm {trash_path}{extension}"
-            print(f"else cmd {cmd_remove_trash}")
 
         subprocess.run(cmd_remove_trash, shell=True)
 
         logging.info(message)
 
-    def _rename_genome_files(self, temp_directory: str, genome_id: str):
-        rename_gtf = f"mv ./{temp_directory}/ncbi_dataset/data/{genome_id}/genomic.gtf ./temp_files/"
-        rename_fasta = f"mv ./{temp_directory}/ncbi_dataset/data/{genome_id}/protein.faa ./temp_files/"
+    def _rename_file(self, old_path: str, new_path: str):
+        cmd_rename = f"mv {old_path} {new_path}"
 
-        subprocess.run(rename_gtf, shell=True)
-        subprocess.run(rename_fasta, shell=True)
+        subprocess.run(cmd_rename, shell=True)
 
-    def _move_files(self, genome_id: str):
-        cmd_move_gtf = f"mv ./temp_files/genomic.gtf ./temp_files/{genome_id}.gtf"
-        cmd_move_fasta = f"mv ./temp_files/protein.faa ./temp_files/{genome_id}.faa"
+    def _move_files(self, genome_files_path):
+        self._move_file(old_path=genome_files_path["gtf_path"], new_path="./temp_files")
 
-        subprocess.run(cmd_move_gtf, shell=True)
-        subprocess.run(cmd_move_fasta, shell=True)
+        self._move_file(
+            old_path=genome_files_path["fasta_path"], new_path="./temp_files"
+        )
+
+    def _move_file(self, old_path: str, new_path: str):
+        cmd_move = f"mv {old_path} {new_path}"
+
+        subprocess.run(cmd_move, shell=True)
 
     def _get_final_pahts_genome_files(self, genome_id: str):
         return {
             "gtf_path": f"./temp_files/{genome_id}.gtf",
-            "fasta_path": f"./temp_files/{genome_id}.faa",
+            "fasta_path": f"./temp_files/{genome_id}.fasta",
         }
+
+    def _get_genomes_paths_by_dataset_catalog(self, genome_id: str):
+        ncbi_dataset_path = f"./temp_files/genome_{genome_id}/ncbi_dataset/data"
+        dataset_catalog_file_path = f"{ncbi_dataset_path}/dataset_catalog.json"
+        with open(dataset_catalog_file_path, "r") as file:
+            data = json.load(file)
+
+            genome_files = data["assemblies"][1]["files"]
+
+            split_in = f"{genome_id}/"
+            fasta_genome_file_name = (genome_files[0]["filePath"]).split(split_in, 1)[
+                -1
+            ]
+
+            gtf_genome_file_name = (genome_files[1]["filePath"]).split(split_in, 1)[-1]
+
+            # fmt: off
+            actual_fasta_path = f"{ncbi_dataset_path}/{genome_id}/{fasta_genome_file_name}"
+            actual_gtf_path = f"{ncbi_dataset_path}/{genome_id}/{gtf_genome_file_name}"
+
+            new_fasta_path = f"{ncbi_dataset_path}/{genome_id}/{genome_id}.fna"
+            new_gtf_path = f"{ncbi_dataset_path}/{genome_id}/{genome_id}.gtf"
+
+            self._rename_file(old_path=actual_fasta_path, new_path=new_fasta_path)
+            self._rename_file(old_path=actual_gtf_path, new_path=new_gtf_path)
+
+            return {
+                "gtf_path": new_gtf_path,
+                "fasta_path": new_fasta_path,
+            }
 
     def get_gtf_and_fasta_genome_from_ncbi(self, genome_id: str):
         try:
-            logging.info(f"Currently downloading {genome_id} with prefetch")
+            logging.info(f"Currently downloading {genome_id} with ncbi dataset")
 
             is_already_downloaded = self.is_already_downloaded(genome_id)
 
@@ -83,17 +115,31 @@ class GenBankAdapter(GenBankPort):
                     extension=".zip",
                 )
 
-                self._rename_genome_files(temp_directory, genome_id)
+                genome_files_path = self._get_genomes_paths_by_dataset_catalog(
+                    genome_id
+                )
 
-                self._move_files(genome_id)
+                self._move_files(genome_files_path)
 
                 self._remove_trash(
-                    trash_path=temp_directory,
+                    trash_path=f"./temp_files/genome_{genome_id}",
                     message=f"The genome {genome_id} folder was removed with sucess",
                     is_recursive=True,
                 )
 
                 return self._get_final_pahts_genome_files(genome_id)
+
+            genome_files_path = self._get_genomes_paths_by_dataset_catalog(genome_id)
+
+            self._move_files(genome_files_path)
+
+            self._remove_trash(
+                trash_path=f"./temp_files/genome_{genome_id}",
+                message=f"The genome {genome_id} folder was removed with sucess",
+                is_recursive=True,
+            )
+
+            return self._get_final_pahts_genome_files(genome_id)
         except subprocess.SubprocessError as e:
             print(e)
             raise Exception(f"Occurred an error when try download: {genome_id}")

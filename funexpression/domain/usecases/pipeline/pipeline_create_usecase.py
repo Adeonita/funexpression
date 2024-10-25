@@ -1,7 +1,6 @@
 from domain.entities.genome import Genome, GenomeFiles, GenomeStatusEnum
 from domain.entities.pipeline import Pipeline
 from domain.usecases.base_usecase import BaseUseCase
-from ports.infrastructure.messaging.task_port import TaskPort
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from infrastructure.celery import (
     convert_sra_to_fasta_task,
@@ -228,75 +227,6 @@ class PipelineCreateUseCase(BaseUseCase):
         if len(pipelines) > 0:
             pipeline = pipelines[0]
 
-            return Pipeline(
-                id=str(pipeline["_id"]),
-                run_id=pipeline["run_id"],
-                email=pipeline["email"],
-                stage=PipelineStageEnum(pipeline["stage"]),
-                control_organism=Triplicate(
-                    srr_1=SRAFile(
-                        acession_number=pipeline["control_organism"]["srr_1"][
-                            "acession_number"
-                        ],
-                        status=SRAFileStatusEnum[
-                            pipeline["control_organism"]["srr_1"]["status"]
-                        ],
-                    ),
-                    srr_2=SRAFile(
-                        acession_number=pipeline["control_organism"]["srr_2"][
-                            "acession_number"
-                        ],
-                        status=SRAFileStatusEnum[
-                            pipeline["control_organism"]["srr_2"]["status"]
-                        ],
-                    ),
-                    srr_3=SRAFile(
-                        acession_number=pipeline["control_organism"]["srr_3"][
-                            "acession_number"
-                        ],
-                        status=SRAFileStatusEnum[
-                            pipeline["control_organism"]["srr_3"]["status"]
-                        ],
-                    ),
-                ),
-                experiment_organism=Triplicate(
-                    srr_1=SRAFile(
-                        acession_number=pipeline["experiment_organism"]["srr_1"][
-                            "acession_number"
-                        ],
-                        status=SRAFileStatusEnum[
-                            pipeline["experiment_organism"]["srr_1"]["status"]
-                        ],
-                    ),
-                    srr_2=SRAFile(
-                        acession_number=pipeline["experiment_organism"]["srr_2"][
-                            "acession_number"
-                        ],
-                        status=SRAFileStatusEnum[
-                            pipeline["experiment_organism"]["srr_2"]["status"]
-                        ],
-                    ),
-                    srr_3=SRAFile(
-                        acession_number=pipeline["experiment_organism"]["srr_3"][
-                            "acession_number"
-                        ],
-                        status=SRAFileStatusEnum[
-                            pipeline["experiment_organism"]["srr_3"]["status"]
-                        ],
-                    ),
-                ),
-                reference_genome=Genome(
-                    acession_number=pipeline["reference_genome"]["acession_number"],
-                    state=GenomeStatusEnum[pipeline["reference_genome"]["status"]],
-                    genome_files=GenomeFiles(
-                        gtf=GenomeStatusEnum[
-                            pipeline["reference_genome"]["genome_files"]["gtf"]
-                        ],
-                        fasta=GenomeStatusEnum[
-                            pipeline["reference_genome"]["genome_files"]["fasta"]
-                        ],
-                    ),
-                ),
-            )
+            return pipeline
 
         return None
