@@ -8,6 +8,7 @@ class Paths:
     output: str
 
 
+@dataclass
 class GenomePaths:
     gtf_path: str
     fasta_path: str
@@ -15,8 +16,13 @@ class GenomePaths:
 
 class StoragePathsPort(Protocol):
 
-    def get_genome_paths(self, fasta_path: str, gtf_path: str) -> GenomePaths:
+    def get_genome_paths(self, genome_id) -> GenomePaths:
         pass
 
     def get_trimming_paths(self, pipeline_id, organism_group, sra_id) -> Paths:
+        pass
+
+    def get_aligner_path(
+        self, pipeline_id: str, organism_group: str, sra_id: str
+    ) -> Paths:
         pass
