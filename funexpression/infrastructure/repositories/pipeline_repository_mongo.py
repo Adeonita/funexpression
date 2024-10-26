@@ -274,3 +274,9 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
             [pipeline.experiment_organism.srr_2.acession_number, "experiment"],
             [pipeline.experiment_organism.srr_3.acession_number, "experiment"],
         ]
+
+    def get_genome_id_by_pipeline(self, pipeline_id: str) -> str:
+
+        pipeline = self.get(pipeline_id)
+
+        return pipeline.reference_genome.acession_number

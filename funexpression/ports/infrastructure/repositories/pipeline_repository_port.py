@@ -64,3 +64,6 @@ class PipelineRepositoryPort(Protocol):
 
     def get_sra_files(self, pipeline_id: str) -> dict:
         pass
+
+    def get_genome_id_by_pipeline(self, pipeline_id: str) -> str:
+        pass
