@@ -1,4 +1,6 @@
 import os
+from domain.entities.pipeline_stage_enum import PipelineStageEnum
+from domain.entities.triplicate import OrganinsGroupEnum
 from ports.infrastructure.storage.storage_path_port import GenomePaths, Paths
 
 
@@ -6,18 +8,17 @@ class StoragePathsAdapter:
 
     def get_genome_paths(self, genome_id: str) -> GenomePaths:
         return GenomePaths(
-            fasta_path=f"./temp/{genome_id}.fna", gtf_path=f"./temp/{genome_id}.gtf"
+            fasta_path=f"./temp_files/{genome_id}.fna",
+            gtf_path=f"./temp_files/{genome_id}.gtf",
         )
 
     def get_converting_paths(self, pipeline_id, organism_group, sra_id):
-        pass
-
-    def get_trimming_paths(self, pipeline_id, organism_group, sra_id) -> Paths:
-
-        self._create_outdir_if_not_exist(
-            pipeline_id=pipeline_id, step="TRIMMED", group=organism_group
+        return Paths(
+            input=f"pipelines/{pipeline_id}/DOWNLOADED/{organism_group}/{sra_id}.sra",
+            output=f"pipelines/{pipeline_id}/CONVERTED/{organism_group}/{sra_id}.fastq",
         )
 
+    def get_trimming_paths(self, pipeline_id, organism_group, sra_id) -> Paths:
         return Paths(
             input=f"pipelines/{pipeline_id}/CONVERTED/{organism_group}/{sra_id}/{sra_id}.fastq",
             output=f"pipelines/{pipeline_id}/TRIMMED/{organism_group}/{sra_id}.fq.gz",
@@ -26,14 +27,67 @@ class StoragePathsAdapter:
     def get_aligner_path(self, pipeline_id: str, organism_group: str, sra_id: str):
         return Paths(
             input=f"pipelines/{pipeline_id}/TRIMMED/{organism_group}/{sra_id}.fq.gz",
-            output=f"pipelines/{pipeline_id}/ALIGNER/{organism_group}/{sra_id}.bam",
+            output=f"pipelines/{pipeline_id}/ALIGNER/{organism_group}/{sra_id}_Aligned.sortedByCoord.out.bam",
         )
 
-    def _create_outdir_if_not_exist(self, pipeline_id: str, step: str, group: str):
-        temp_files = os.path.join("pipelines/", pipeline_id, step, group)
+    def _create_outdir_if_not_exist(
+        self, pipeline_id: str, step: str, group: str, acession_number=None
+    ):
+        if acession_number is not None:
+            temp_files = os.path.join(
+                "pipelines/", pipeline_id, step, group, acession_number
+            )
+        else:
+            temp_files = os.path.join("pipelines/", pipeline_id, step, group)
 
         if not os.path.exists(temp_files):
+            print(f"O diretório {temp_files} foi criado")
+
             os.makedirs(temp_files)
             return temp_files
 
+        print(f"O diretório {temp_files} já existe")
         return None
+
+    # def _create_outdir_if_not_exist(self, pipeline_id: str, step: str, group: str):
+    #     temp_files = os.path.join("pipelines/", pipeline_id, step, group)
+
+    #     if not os.path.exists(temp_files):
+    #         os.makedirs(temp_files)
+    #         return temp_files
+
+    #     return None
+
+    # def _create_dirs(self):
+    #     stages = [
+    #         PipelineStageEnum.CONVERTED,
+    #         PipelineStageEnum.TRIMMED,
+    #         PipelineStageEnum.ALIGNED,
+    #         PipelineStageEnum.COUNTED,
+    #         PipelineStageEnum.DIFFED,
+    #     ]
+
+    #     groups = [OrganinsGroupEnum.EXPERIMENT, OrganinsGroupEnum.CONTROL]
+
+    #     stage_combinations = []
+    #     for stage in stages:
+    #         for group in groups:
+    #             stage_combinations.append((stage, group))
+
+    #     return stage_combinations
+
+    # def create_pipeline_directory_structure(self, pipeline_id: str):
+    #     directories = self._create_dirs()
+    #     for directory_stage, directory_organism_group in directories:
+    #         diretory = os.path.join(
+    #             "pipelines/",
+    #             pipeline_id,
+    #             directory_stage,
+    #             directory_organism_group,
+    #         )
+
+    #         if not os.path.exists(diretory):
+    #             os.makedirs(diretory)
+    #             return diretory
+
+    #     return None
