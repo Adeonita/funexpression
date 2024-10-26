@@ -49,3 +49,27 @@ def trimming_transcriptome_task(
         ),
         queue="trimming_transcriptome",
     )
+
+
+def aligner_transcriptome_task(
+    pipeline_id,
+    sra_id,
+    organism_group,
+    genome_index_path,
+    genome_fasta_path,
+    transcriptome_trimed_path,
+    output_path,
+):
+    app.send_task(
+        "infrastructure.messaging.task.aligner_transcriptome",
+        args=(
+            pipeline_id,
+            sra_id,
+            organism_group,
+            genome_index_path,
+            genome_fasta_path,
+            transcriptome_trimed_path,
+            output_path,
+        ),
+        queue="aligner_transcriptome",
+    )
