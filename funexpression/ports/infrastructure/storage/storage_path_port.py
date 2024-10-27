@@ -30,5 +30,10 @@ class StoragePathsPort(Protocol):
     ) -> Paths:
         pass
 
-    def _create_outdir_if_not_exist(self, pipeline_id: str, step: str, group: str):
+    def _create_outdir_if_not_exist(
+        self, pipeline_id: str, step: str, group: str, sra_id=None
+    ):
+        pass
+
+    def create_pipeline_directory_structure(pipeline_id: str):
         pass

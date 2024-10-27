@@ -1,10 +1,14 @@
 import os
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from domain.entities.triplicate import OrganinsGroupEnum
-from ports.infrastructure.storage.storage_path_port import GenomePaths, Paths
+from ports.infrastructure.storage.storage_path_port import (
+    GenomePaths,
+    Paths,
+    StoragePathsPort,
+)
 
 
-class StoragePathsAdapter:
+class StoragePathsAdapter(StoragePathsPort):
 
     def get_genome_paths(self, genome_id: str) -> GenomePaths:
         return GenomePaths(
@@ -41,9 +45,9 @@ class StoragePathsAdapter:
             temp_files = os.path.join("pipelines/", pipeline_id, step, group)
 
         if not os.path.exists(temp_files):
+            os.makedirs(temp_files)
             print(f"O diretório {temp_files} foi criado")
 
-            os.makedirs(temp_files)
             return temp_files
 
         print(f"O diretório {temp_files} já existe")
@@ -58,36 +62,35 @@ class StoragePathsAdapter:
 
     #     return None
 
-    # def _create_dirs(self):
-    #     stages = [
-    #         PipelineStageEnum.CONVERTED,
-    #         PipelineStageEnum.TRIMMED,
-    #         PipelineStageEnum.ALIGNED,
-    #         PipelineStageEnum.COUNTED,
-    #         PipelineStageEnum.DIFFED,
-    #     ]
+    def _create_dirs(self):
+        stages = [
+            PipelineStageEnum.CONVERTED.value,
+            PipelineStageEnum.TRIMMED.value,
+            PipelineStageEnum.ALIGNED.value,
+            PipelineStageEnum.COUNTED.value,
+            PipelineStageEnum.DIFFED.value,
+        ]
 
-    #     groups = [OrganinsGroupEnum.EXPERIMENT, OrganinsGroupEnum.CONTROL]
+        groups = [OrganinsGroupEnum.EXPERIMENT.value, OrganinsGroupEnum.CONTROL.value]
 
-    #     stage_combinations = []
-    #     for stage in stages:
-    #         for group in groups:
-    #             stage_combinations.append((stage, group))
+        stage_combinations = []
+        for stage in stages:
+            for group in groups:
+                stage_combinations.append((stage, group))
 
-    #     return stage_combinations
+        return stage_combinations
 
-    # def create_pipeline_directory_structure(self, pipeline_id: str):
-    #     directories = self._create_dirs()
-    #     for directory_stage, directory_organism_group in directories:
-    #         diretory = os.path.join(
-    #             "pipelines/",
-    #             pipeline_id,
-    #             directory_stage,
-    #             directory_organism_group,
-    #         )
+    def create_pipeline_directory_structure(self, pipeline_id: str):
+        directories = self._create_dirs()
+        for directory_stage, directory_organism_group in directories:
+            diretory = os.path.join(
+                "./pipelines/",
+                pipeline_id,
+                directory_stage,
+                directory_organism_group,
+            )
 
-    #         if not os.path.exists(diretory):
-    #             os.makedirs(diretory)
-    #             return diretory
+            if not os.path.exists(diretory):
+                os.makedirs(diretory)
 
-    #     return None
+        return None
