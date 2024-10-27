@@ -3,6 +3,7 @@ from domain.entities.triplicate import SRAFileStatusEnum
 from domain.usecases.transcriptome.input.trimming_transcriptome_usecase_input import (
     TrimmingTranscriptomeUseCaseInput,
 )
+from infrastructure.celery import aligner_transcriptome_task
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
 )
@@ -37,7 +38,23 @@ class TranscriptomeTrimming:
         )
 
         print("Sending to the alignment queue...")
-        # TODO: send to alignment queue
+
+        genome_id = self.pipeline_repository.get_genome_id_by_pipeline(
+            input.pipeline_id
+        )
+        genome_paths = self.storage_paths.get_genome_paths(genome_id)
+        aligner_paths = self.storage_paths.get_aligner_path(
+            input.pipeline_id, input.organism_group, input.sra_id
+        )
+        aligner_transcriptome_task(
+            pipeline_id=input.pipeline_id,
+            sra_id=input.sra_id,
+            organism_group=input.organism_group,
+            genome_index_path=genome_paths.gtf_path,
+            genome_fasta_path=genome_paths.fasta_path,
+            transcriptome_trimed_path=input.output_path,
+            output_path=aligner_paths.output,
+        )
         print("Message sent to the alignment queue!")
 
         if self.pipeline_repository.is_all_sra_files_trimmed(input.pipeline_id):

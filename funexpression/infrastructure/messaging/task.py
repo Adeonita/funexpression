@@ -35,20 +35,17 @@ class Task(TaskPort):
     def sra_transcriptome_download(
         self, sra_id: str, pipeline_id: str, organism_group: str
     ):
+        try:
+            transcriptome_download_usecase = (
+                TranscriptomeDownloadUseCaseFactory.create()
+            )
 
-        print(f"Aqui é o sra_id: {sra_id}")
-        print(f"Aqui é o pipeline_id: {pipeline_id}")
-        # try:
-        #     transcriptome_download_usecase = (
-        #         TranscriptomeDownloadUseCaseFactory.create()
-        #     )
-
-        #     input = TranscriptomeDownloadUseCaseInput(
-        #         sra_id=sra_id, pipeline_id=pipeline_id, organism_group=organism_group
-        #     )
-        #     transcriptome_download_usecase.execute(input)
-        # except Exception as e:
-        #     return f"there was an error when downloading sra sequence {e}"
+            input = TranscriptomeDownloadUseCaseInput(
+                sra_id=sra_id, pipeline_id=pipeline_id, organism_group=organism_group
+            )
+            transcriptome_download_usecase.execute(input)
+        except Exception as e:
+            return f"there was an error when downloading sra sequence {e}"
 
     @app.task(bind=True, queue="genbank_ncbi_download")
     def genome_download(self, genome_id: str, pipeline_id: str):
@@ -92,3 +89,16 @@ class Task(TaskPort):
             trimming_usecase.execute(input)
         except Exception as e:
             return f"there was an error when trimming the transcriptome {e}"
+
+    @app.task(bind=True, queue="aligner_transcriptome")
+    def aligner_transcriptome(
+        self,
+        pipeline_id: str,
+        sra_id: str,
+        organism_group: OrganinsGroupEnum,
+        genome_index_path: str,
+        genome_fasta_path: str,
+        transcriptome_trimed_path: str,
+        output_path: str,
+    ):
+        pass
