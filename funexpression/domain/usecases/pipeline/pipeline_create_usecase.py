@@ -6,6 +6,7 @@ from infrastructure.celery import (
     convert_sra_to_fasta_task,
     download_genome_task,
     download_sra_task,
+    trimming_transcriptome_task,
 )
 
 from domain.entities.triplicate import (
@@ -20,6 +21,7 @@ from domain.usecases.pipeline.input.pipeline_create_input import (
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
 )
+from ports.infrastructure.storage.storage_path_port import StoragePathsPort
 
 
 class PipelineCreateUseCase(BaseUseCase):
@@ -27,8 +29,10 @@ class PipelineCreateUseCase(BaseUseCase):
     def __init__(
         self,
         pipeline_repository: PipelineRepositoryPort,
+        storage_paths: StoragePathsPort,
     ):
         self.pipeline_repository = pipeline_repository
+        self.storage_paths = storage_paths
 
     def execute(self, input: PipelineCreateUseCaseInput):
         created_pipeline = self._find_pipeline(input)
@@ -63,6 +67,13 @@ class PipelineCreateUseCase(BaseUseCase):
                 and sra_files_download_completed
             )
 
+            pipeline_sra_files_read_to_trimming = (
+                self.pipeline_repository.is_all_file_download_converted(
+                    pipeline_id=created_pipeline.id
+                )
+                and created_pipeline.stage == PipelineStageEnum.CONVERTED
+            )
+
             if pipeline_files_downloaded:
                 self.pipeline_repository.update_status(
                     created_pipeline.id, PipelineStageEnum.DOWNLOADED
@@ -81,8 +92,15 @@ class PipelineCreateUseCase(BaseUseCase):
                     "message": f"Your pipeline is already created, and are await to conversion.",
                     "pipeline_stage": created_pipeline.stage.value,
                 }
-            # elif created_pipeline.stage == PipelineStageEnum.CONVERTED:
-            #     self._trimming_transcriptomes(created_pipeline)
+            elif pipeline_sra_files_read_to_trimming:
+                self.pipeline_repository.update_status(
+                    created_pipeline.id, PipelineStageEnum.TRIMMED
+                )
+                self._trimming_transcriptomes(created_pipeline)
+                return {
+                    "message": f"Your pipeline is already created, and are await to trimming.",
+                    "pipeline_stage": created_pipeline.stage.value,
+                }
             # elif created_pipeline.stage == PipelineStageEnum.TRIMMED:
             #     self._align_transcriptomes(created_pipeline)
             # elif created_pipeline.stage == PipelineStageEnum.ALIGNED:
@@ -106,9 +124,51 @@ class PipelineCreateUseCase(BaseUseCase):
         )
 
         # self._download_transcriptomes(pipeline)
+        self.storage_paths.create_pipeline_directory_structure(pipeline_id=pipeline.id)
+
         self._download_genome_and_transcriptome(pipeline)
 
         return pipeline
+
+    def _trimming_sra(
+        self, sra_file: SRAFile, pipeline_id: str, organism_group: OrganinsGroupEnum
+    ):
+        sra_id = sra_file.acession_number
+
+        input_path = self.storage_paths.get_converting_paths(
+            pipeline_id, organism_group, sra_id
+        ).input
+        output_path = self.storage_paths.get_trimming_paths(
+            pipeline_id, organism_group, sra_id
+        ).output
+
+        trimming_transcriptome_task(
+            pipeline_id=pipeline_id,
+            sra_id=sra_id,
+            organism_group=organism_group,
+            trimming_type="SE",
+            input_path=input_path,
+            output_path=output_path,
+        )
+
+    def _trimming_triplicate(
+        self,
+        triplicate: Triplicate,
+        pipeline_id: str,
+        organism_group: OrganinsGroupEnum,
+    ):
+        self._trimming_sra(triplicate.srr_1, pipeline_id, organism_group)
+        self._trimming_sra(triplicate.srr_2, pipeline_id, organism_group)
+        self._trimming_sra(triplicate.srr_3, pipeline_id, organism_group)
+
+    def _trimming_transcriptomes(self, pipeline: Pipeline):
+        self._trimming_triplicate(
+            pipeline.control_organism, pipeline.id, OrganinsGroupEnum.CONTROL
+        )
+
+        self._trimming_triplicate(
+            pipeline.experiment_organism, pipeline.id, OrganinsGroupEnum.EXPERIMENT
+        )
 
     def _get_reference_genome(self, input: PipelineCreateUseCaseInput) -> Genome:
         return Genome(
