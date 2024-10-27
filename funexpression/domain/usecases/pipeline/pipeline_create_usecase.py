@@ -92,6 +92,7 @@ class PipelineCreateUseCase(BaseUseCase):
                     "message": f"Your pipeline is already created, and are await to conversion.",
                     "pipeline_stage": created_pipeline.stage.value,
                 }
+            # converted pipeline
             elif pipeline_sra_files_read_to_trimming:
                 self.pipeline_repository.update_status(
                     created_pipeline.id, PipelineStageEnum.TRIMMED
@@ -135,7 +136,7 @@ class PipelineCreateUseCase(BaseUseCase):
     ):
         sra_id = sra_file.acession_number
 
-        input_path = self.storage_paths.get_converting_paths(
+        input_path = self.storage_paths.get_trimming_paths(
             pipeline_id, organism_group, sra_id
         ).input
         output_path = self.storage_paths.get_trimming_paths(
