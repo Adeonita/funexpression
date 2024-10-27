@@ -22,12 +22,14 @@ class ConversionSraToFastaUseCase:
 
     def execute(self, sra_id, pipeline_id, organism_group):
 
-        output_dir = self._create_outdir_if_not_exist(
-            pipeline_id, "CONVERTED", organism_group, sra_id
+        # TODO: testar com a remoção do outputdir
+        output_dir = self.storage_paths._create_outdir_if_not_exist(
+            pipeline_id, PipelineStageEnum.CONVERTED.value, organism_group, sra_id
         )
 
         if output_dir is not None:
-            self.fasterq_dump_adapter.dump_sra_to_fasta(sra_id, output_dir)
+            # remover após os testes
+            # self.fasterq_dump_adapter.dump_sra_to_fasta(sra_id, output_dir)
 
             self.pipeline_repository.update_sra_file_status(
                 pipeline_id=pipeline_id,
@@ -58,16 +60,3 @@ class ConversionSraToFastaUseCase:
                     pipeline_stage=PipelineStageEnum.CONVERTED,
                 )
                 print("Converted step done!")
-
-    def _create_outdir_if_not_exist(
-        self, pipeline_id: str, step: str, group: str, acession_number: str
-    ):
-        temp_files = os.path.join(
-            "pipelines/", pipeline_id, step, group, acession_number
-        )
-
-        if not os.path.exists(temp_files):
-            os.makedirs(temp_files)
-            return temp_files
-
-        return None
