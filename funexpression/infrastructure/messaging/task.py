@@ -90,6 +90,16 @@ class Task(TaskPort):
         except Exception as e:
             return f"there was an error when trimming the transcriptome {e}"
 
+    @app.task(bind=True, queue="generate_index_genome")
+    def generate_index_genome(
+        self,
+        pipeline_id: str,
+        gtf_genome_path: str,
+        fasta_genome_path: str,
+        index_genome_output_path: str,
+    ):
+        pass
+
     @app.task(bind=True, queue="aligner_transcriptome")
     def aligner_transcriptome(
         self,

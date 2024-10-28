@@ -73,3 +73,18 @@ def aligner_transcriptome_task(
         ),
         queue="aligner_transcriptome",
     )
+
+
+def generate_index_genome_task(
+    pipeline_id, gtf_genome_path, fasta_genome_path, index_genome_output_path
+):
+    app.send_task(
+        "infrastructure.messaging.task.generate_index_genome",
+        args=(
+            pipeline_id,
+            gtf_genome_path,
+            fasta_genome_path,
+            index_genome_output_path,
+        ),
+        queue="generate_index_genome",
+    )
