@@ -2,6 +2,7 @@ from domain.usecases.base_usecase import BaseUseCase
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from domain.entities.genome import GenomeFilesEnum, GenomeStatusEnum
 from domain.usecases.helpers.helpers import send_sra_to_conversion_queue_in_bulk
+from infrastructure.celery import generate_index_genome_task
 from ports.infrastructure.bio_database.genbank_port import GenBankPort
 
 from domain.usecases.genome.input.genome_downlaod_usecase_input import (
@@ -10,6 +11,7 @@ from domain.usecases.genome.input.genome_downlaod_usecase_input import (
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
 )
+from ports.infrastructure.storage.storage_path_port import StoragePathsPort
 
 
 class GenomeDownloadUseCase(BaseUseCase):
@@ -17,8 +19,10 @@ class GenomeDownloadUseCase(BaseUseCase):
     def __init__(
         self,
         genbank_adapter: GenBankPort,
+        storage_paths: StoragePathsPort,
         pipeline_repository: PipelineRepositoryPort,
     ):
+        self.storage_paths = storage_paths
         self.genbank_adapter = genbank_adapter
         self.pipeline_repository = pipeline_repository
 
@@ -31,14 +35,20 @@ class GenomeDownloadUseCase(BaseUseCase):
         # TODO: descomentar após os testes
         # downloaded = self.genbank_adapter.get_gtf_and_fasta_genome_from_ncbi(genome_id)
 
-        # TODO: remover após os testes
-        downloaded = {
-            "gtf_path": f"./temp_files/{genome_id}.gtf",
-            "fasta_path": f"./temp_files/{genome_id}.fasta",
-        }
+        # TODO: remover após os testes e manter o uso do storage paths
+        # downloaded = {
+        #     "gtf_path": f"./temp_files/{genome_id}.gtf",
+        #     "fasta_path": f"./temp_files/{genome_id}.fasta",
+        # }
 
-        gtf_genome = downloaded.get("gtf_path")
-        fasta_genome = downloaded.get("fasta_path")
+        # gtf_genome = downloaded.get("gtf_path")
+        # fasta_genome = downloaded.get("fasta_path")
+
+        genome_paths = self.storage_paths.get_genome_paths(genome_id)
+
+        gtf_genome = genome_paths.gtf_path
+        fasta_genome = genome_paths.fasta_path
+        index_genome = genome_paths.index_path
 
         is_read_genomes_files = gtf_genome and fasta_genome
 
@@ -64,6 +74,17 @@ class GenomeDownloadUseCase(BaseUseCase):
                 genome_id=genome_id,
                 status=GenomeStatusEnum.DOWNLOADED,
             )
+
+            print("Sending to the generate index genome queue...")
+
+            generate_index_genome_task(
+                pipeline_id=pipeline_id,
+                gtf_genome_path=gtf_genome,
+                fasta_genome_path=fasta_genome,
+                index_genome_output_path=index_genome,
+            )
+
+            print("Message sent to the generate index genome queue!")
 
         if self.pipeline_repository.is_all_file_download_downloaded(input.pipeline_id):
             self.pipeline_repository.update_status(
