@@ -136,3 +136,40 @@ WORKDIR /funexpression
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=aligner_transcriptome", "--concurrency=3"]
+
+
+
+# the image is used to run worker for aligner transcriptomes
+FROM python:3.11-slim-buster as generate_index_genome_worker
+
+# dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    wget \
+    zlib1g-dev \
+    libbz2-dev \
+    liblzma-dev \
+    libcurl4-openssl-dev \
+    vim-common \
+    unzip \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# STAR 2.7.11b
+RUN wget https://github.com/alexdobin/STAR/archive/refs/tags/2.7.11b.tar.gz \
+    && tar -xvzf 2.7.11b.tar.gz \
+    && cd STAR-2.7.11b/source \
+    && make Depend.list \
+    && make STAR \
+    && mv STAR /usr/local/bin/ \
+    && cd ../../ \
+    && rm -rf 2.7.11b.tar.gz STAR-2.7.11b
+
+ENV VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:/app:$PATH"
+
+WORKDIR /funexpression
+
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+
+ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=generate_genome_index", "--concurrency=3"]
