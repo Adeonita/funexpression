@@ -9,32 +9,36 @@ class RnaStarAdapter(AlignerPort):
     def __init__(self):
         self.THREAD_NUMBER = 4
 
-    def _generate_genome_index(
-        self, genome_gtf_path: str, genome_fasta_path: str, genome_index_out_path: str
+    def generate_genome_index(
+        self,
+        genome_id: str,
+        gtf_genome_path: str,
+        fasta_genome_path: str,
+        index_genome_output_path: str,
     ) -> str:
         try:
-            logging.info(f"Generating genome index for: {genome_fasta_path}")
+            logging.info(f"Generating genome index for: {genome_id}")
 
             cmd = f"""
-                    STAR --runThreadN {self.THREAD_NUMBER}
-                    --runMode genomeGenerate
-                    --genomeDir {genome_index_out_path}
-                    --genomeFastaFiles {genome_fasta_path}
-                    --sjdbGTFfile {genome_gtf_path}
+                    STAR --runThreadN {self.THREAD_NUMBER} \
+                    --runMode genomeGenerate \
+                    --genomeDir {index_genome_output_path} \
+                    --genomeFastaFiles {fasta_genome_path} \
+                    --sjdbGTFfile {gtf_genome_path} \
                     --sjdbOverhang 100
                 """
 
             subprocess.run(cmd, shell=True, check=True)
 
             logging.info(
-                f"Genome index for {genome_fasta_path} was generated with success and can be found at {genome_index_out_path}"
+                f"Genome index for {genome_id} was generated with success and can be found at {index_genome_output_path}"
             )
 
-            return genome_index_out_path
+            return index_genome_output_path
 
         except subprocess.CalledProcessError as e:
             raise Exception(
-                f"Error when generate genome index for {genome_fasta_path}: {e}"
+                f"Error when generate genome index for {fasta_genome_path}: {e}"
             )
 
     def align(
