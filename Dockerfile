@@ -172,4 +172,4 @@ WORKDIR /funexpression
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=generate_genome_index", "--concurrency=3"]
+ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=generate_index_genome", "--concurrency=3"]
