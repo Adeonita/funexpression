@@ -75,16 +75,13 @@ class GenomeDownloadUseCase(BaseUseCase):
                 status=GenomeStatusEnum.DOWNLOADED,
             )
 
-            print("Sending to the generate index genome queue...")
-
             generate_index_genome_task(
                 pipeline_id=pipeline_id,
+                genome_id=genome_id,
                 gtf_genome_path=gtf_genome,
                 fasta_genome_path=fasta_genome,
                 index_genome_output_path=index_genome,
             )
-
-            print("Message sent to the generate index genome queue!")
 
         if self.pipeline_repository.is_all_file_download_downloaded(input.pipeline_id):
             self.pipeline_repository.update_status(

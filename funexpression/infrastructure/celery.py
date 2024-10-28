@@ -76,15 +76,20 @@ def aligner_transcriptome_task(
 
 
 def generate_index_genome_task(
-    pipeline_id, gtf_genome_path, fasta_genome_path, index_genome_output_path
+    pipeline_id, genome_id, gtf_genome_path, fasta_genome_path, index_genome_output_path
 ):
+    print("Sending to the generate index genome queue...")
+
     app.send_task(
         "infrastructure.messaging.task.generate_index_genome",
         args=(
             pipeline_id,
+            genome_id,
             gtf_genome_path,
             fasta_genome_path,
             index_genome_output_path,
         ),
         queue="generate_index_genome",
     )
+
+    print("Message sent to the generate index genome queue!")
