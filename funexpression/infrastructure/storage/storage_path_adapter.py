@@ -14,6 +14,7 @@ class StoragePathsAdapter(StoragePathsPort):
         return GenomePaths(
             fasta_path=f"./temp_files/{genome_id}.fna",
             gtf_path=f"./temp_files/{genome_id}.gtf",
+            index_path=f"./temp_files/{genome_id}_index",
         )
 
     def get_converting_paths(self, pipeline_id, organism_group, sra_id):
