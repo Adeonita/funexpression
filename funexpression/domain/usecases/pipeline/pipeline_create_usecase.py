@@ -6,6 +6,7 @@ from infrastructure.celery import (
     convert_sra_to_fasta_task,
     download_genome_task,
     download_sra_task,
+    generate_index_genome_task,
     trimming_transcriptome_task,
 )
 
@@ -39,6 +40,28 @@ class PipelineCreateUseCase(BaseUseCase):
 
         if created_pipeline:
             created_pipeline = Pipeline.from_json(created_pipeline)
+
+            pipeline_genome_files_downloaded = (
+                created_pipeline.reference_genome.genome_files.fasta
+                == GenomeStatusEnum.DOWNLOADED
+                and created_pipeline.reference_genome.genome_files.gtf
+                == GenomeStatusEnum.DOWNLOADED
+            )
+
+            pipeline_read_to_generate_genome_index = (
+                created_pipeline.stage == PipelineStageEnum.PENDING
+                and pipeline_genome_files_downloaded
+            )
+
+            if pipeline_read_to_generate_genome_index:
+                # genome files already downloaded
+                self._generate_genome_index(created_pipeline)
+
+                return {
+                    "message": "Your pipeline is awaiting to generate genome index, please wait a moment",
+                    "pipeline_stage": created_pipeline.stage.value,
+                }
+
             sra_files_download_completed = (
                 self.pipeline_repository.is_all_file_download_downloaded(
                     created_pipeline.id
@@ -131,6 +154,19 @@ class PipelineCreateUseCase(BaseUseCase):
 
         return pipeline
 
+    def _generate_genome_index(self, pipeline: Pipeline):
+        paths = self.storage_paths.get_genome_paths(
+            pipeline.reference_genome.acession_number
+        )
+
+        generate_index_genome_task(
+            pipeline_id=pipeline.id,
+            genome_id=pipeline.reference_genome.acession_number,
+            gtf_genome_path=paths.gtf_path,
+            fasta_genome_path=paths.fasta_path,
+            index_genome_output_path=paths.index_path,
+        )
+
     def _trimming_sra(
         self, sra_file: SRAFile, pipeline_id: str, organism_group: OrganinsGroupEnum
     ):
@@ -178,6 +214,7 @@ class PipelineCreateUseCase(BaseUseCase):
             genome_files=GenomeFiles(
                 gtf=GenomeStatusEnum.PENDING,
                 fasta=GenomeStatusEnum.PENDING,
+                index=GenomeStatusEnum.PENDING,
             ),
         )
 
