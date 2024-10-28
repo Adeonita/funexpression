@@ -2,6 +2,15 @@ from typing import Protocol
 
 
 class AlignerPort(Protocol):
+
+    def generate_genome_index(
+        self,
+        gtf_genome_path: str,
+        fasta_genome_path: str,
+        index_genome_output_path: str,
+    ) -> str:
+        pass
+
     def align(
         self,
         sra_id: str,
