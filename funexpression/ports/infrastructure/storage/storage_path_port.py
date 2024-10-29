@@ -12,6 +12,7 @@ class Paths:
 class GenomePaths:
     gtf_path: str
     fasta_path: str
+    index_path: str
 
 
 class StoragePathsPort(Protocol):

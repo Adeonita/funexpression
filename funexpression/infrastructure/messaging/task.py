@@ -2,6 +2,9 @@ from domain.entities.triplicate import OrganinsGroupEnum
 from domain.factories.genome_download_usecase_factory import (
     GenomeDownloadUseCaseFactory,
 )
+from domain.factories.genome_generate_index_usecase_factory import (
+    GenomeIndexGenerateUseCaseFactory,
+)
 from domain.factories.transcriptome.conversion_sra_to_fasta_usecase_factory import (
     ConversionSraToFastaUseCaseFactory,
 )
@@ -14,6 +17,9 @@ from domain.factories.transcriptome.transcriptome_trimming_usecase_factory impor
 from domain.usecases.base_usecase import BaseUseCase
 from domain.usecases.genome.input.genome_downlaod_usecase_input import (
     GenomeDownloadUseCaseInput,
+)
+from domain.usecases.genome.input.genome_generate_index_usecase_input import (
+    GenomeGenerateIndexUseCaseInput,
 )
 from domain.usecases.transcriptome.input.conversion_sra_to_fasta_usecase_input import (
     ConversionSraToFastaUseCaseInput,
@@ -89,6 +95,31 @@ class Task(TaskPort):
             trimming_usecase.execute(input)
         except Exception as e:
             return f"there was an error when trimming the transcriptome {e}"
+
+    @app.task(bind=True, queue="generate_index_genome")
+    def generate_index_genome(
+        self,
+        pipeline_id: str,
+        genome_id: str,
+        gtf_genome_path: str,
+        fasta_genome_path: str,
+        index_genome_output_path: str,
+    ):
+        try:
+            input = GenomeGenerateIndexUseCaseInput(
+                pipeline_id=pipeline_id,
+                genome_id=genome_id,
+                gtf_genome_path=gtf_genome_path,
+                fasta_genome_path=fasta_genome_path,
+                index_genome_output_path=index_genome_output_path,
+            )
+
+            genome_index_generate_usecase = GenomeIndexGenerateUseCaseFactory.create()
+
+            genome_index_generate_usecase.execute(input)
+        except Exception as e:
+            return f"there was an error when downloading genome {e}"
+        pass
 
     @app.task(bind=True, queue="aligner_transcriptome")
     def aligner_transcriptome(

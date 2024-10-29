@@ -55,6 +55,7 @@ class Pipeline:
                 "genome_files": {
                     "gtf": self.reference_genome.genome_files.gtf.value,
                     "fasta": self.reference_genome.genome_files.fasta.value,
+                    "index": self.reference_genome.genome_files.index.value,
                 },
             },
         }
@@ -127,6 +128,9 @@ class Pipeline:
                     ],
                     fasta=GenomeStatusEnum[
                         json["reference_genome"]["genome_files"]["fasta"]
+                    ],
+                    index=GenomeStatusEnum[
+                        json["reference_genome"]["genome_files"]["index"]
                     ],
                 ),
             ),

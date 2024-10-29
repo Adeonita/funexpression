@@ -5,17 +5,20 @@ from dataclasses import dataclass
 class GenomeStatusEnum(StrEnum):
     PENDING = "PENDING"
     DOWNLOADED = "DOWNLOADED"
+    GENERATED = "GENERATED"
 
 
 class GenomeFilesEnum(StrEnum):
     GTF = "GTF"
     FASTA = "FASTA"
+    INDEX = "INDEX"
 
 
 @dataclass
 class GenomeFiles:
     gtf: GenomeStatusEnum
     fasta: GenomeStatusEnum
+    index: GenomeStatusEnum
 
 
 @dataclass
