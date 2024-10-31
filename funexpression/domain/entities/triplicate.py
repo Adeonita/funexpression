@@ -7,6 +7,8 @@ class SRAFileStatusEnum(StrEnum):
     DOWNLOADED = "DOWNLOADED"
     CONVERTED = "CONVERTED"
     TRIMMED = "TRIMMED"
+    ALIGNED = "ALIGNED"
+    COUNTED = "COUNTED"
 
 
 class OrganinsGroupEnum(StrEnum):
