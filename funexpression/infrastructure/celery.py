@@ -51,30 +51,6 @@ def trimming_transcriptome_task(
     )
 
 
-def aligner_transcriptome_task(
-    pipeline_id,
-    sra_id,
-    organism_group,
-    genome_index_path,
-    genome_fasta_path,
-    transcriptome_trimed_path,
-    output_path,
-):
-    app.send_task(
-        "infrastructure.messaging.task.aligner_transcriptome",
-        args=(
-            pipeline_id,
-            sra_id,
-            organism_group,
-            genome_index_path,
-            genome_fasta_path,
-            transcriptome_trimed_path,
-            output_path,
-        ),
-        queue="aligner_transcriptome",
-    )
-
-
 def generate_index_genome_task(
     pipeline_id, genome_id, gtf_genome_path, fasta_genome_path, index_genome_output_path
 ):
@@ -93,3 +69,31 @@ def generate_index_genome_task(
     )
 
     print("Message sent to the generate index genome queue!")
+
+
+def aligner_transcriptome_task(
+    pipeline_id,
+    sra_id,
+    # genome_id, TODO: add that
+    organism_group,
+    genome_index_path,
+    trimed_transcriptome_path,
+    aligned_transcriptome_path,
+):
+    print("Sending to the aligner genome queue...")
+
+    app.send_task(
+        "infrastructure.messaging.task.aligner_transcriptome",
+        args=(
+            pipeline_id,
+            sra_id,
+            # genome_id,
+            organism_group,
+            genome_index_path,
+            trimed_transcriptome_path,
+            aligned_transcriptome_path,
+        ),
+        queue="aligner_transcriptome",
+    )
+
+    print("Message sent to the aligner genome queue!")
