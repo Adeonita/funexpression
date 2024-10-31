@@ -1,4 +1,5 @@
 from domain.entities.triplicate import OrganinsGroupEnum
+from domain.factories.genome_aligner_usecase_factory import GenomeAlignerUseCaseFactory
 from domain.factories.genome_download_usecase_factory import (
     GenomeDownloadUseCaseFactory,
 )
@@ -14,7 +15,9 @@ from domain.factories.transcriptome.transcriptome_download_usecase_factory impor
 from domain.factories.transcriptome.transcriptome_trimming_usecase_factory import (
     TranscriptomeTrimmingUseCaseFactory,
 )
-from domain.usecases.base_usecase import BaseUseCase
+from domain.usecases.genome.input.genome_aligner_usecase_input import (
+    GenomeAlignerUseCaseInput,
+)
 from domain.usecases.genome.input.genome_downlaod_usecase_input import (
     GenomeDownloadUseCaseInput,
 )
@@ -128,8 +131,21 @@ class Task(TaskPort):
         sra_id: str,
         organism_group: OrganinsGroupEnum,
         genome_index_path: str,
-        genome_fasta_path: str,
         transcriptome_trimed_path: str,
-        output_path: str,
+        aligned_transcriptome_path: str,
     ):
-        pass
+
+        try:
+            input = GenomeAlignerUseCaseInput(
+                pipeline_id=pipeline_id,
+                sra_id=sra_id,
+                organism_group=organism_group,
+                genome_index_path=genome_index_path,
+                trimed_transcriptome_path=transcriptome_trimed_path,
+                aligned_transcriptome_path=aligned_transcriptome_path,
+            )
+
+            genome_aligner_usecase = GenomeAlignerUseCaseFactory.create()
+            genome_aligner_usecase.execute(input)
+        except Exception as e:
+            return f"there was an error when align genome {e}"

@@ -52,11 +52,12 @@ class RnaStarAdapter(AlignerPort):
             logging.info(f"Aligner genome for for: {sra_id}")
 
             cmd = f"""
-                    STAR --runThreadN {self.THREAD_NUMBER} 
-                        --genomeDir {genome_index_path} 
-                        --readFilesIn {input_path} 
-                        --outFileNamePrefix {output_path} 
-                        --outSAMtype BAM SortedByCoordinate 
+                    STAR --runThreadN {self.THREAD_NUMBER} \
+                    --genomeDir {genome_index_path} \
+                    --readFilesIn {input_path} \
+                    --readFilesCommand zcat \
+                    --outFileNamePrefix {output_path} \
+                    --outSAMtype BAM SortedByCoordinate
                 """
 
             subprocess.run(cmd, shell=True, check=True)

@@ -31,8 +31,9 @@ class StoragePathsAdapter(StoragePathsPort):
 
     def get_aligner_path(self, pipeline_id: str, organism_group: str, sra_id: str):
         return Paths(
-            input=f"pipelines/{pipeline_id}/TRIMMED/{organism_group}/{sra_id}.fq.gz",
-            output=f"pipelines/{pipeline_id}/ALIGNER/{organism_group}/{sra_id}_Aligned.sortedByCoord.out.bam",
+            input=f"./pipelines/{pipeline_id}/TRIMMED/{organism_group}/{sra_id}.fq.gz",
+            output=f"./pipelines/{pipeline_id}/ALIGNER/{organism_group}/{sra_id}_",
+            # output=f"pipelines/{pipeline_id}/ALIGNER/{organism_group}/{sra_id}_Aligned.sortedByCoord.out.bam",
         )
 
     def _create_outdir_if_not_exist(

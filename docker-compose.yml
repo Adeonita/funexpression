@@ -27,6 +27,8 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    volumes:
+      - ./configs/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
     networks:
       - backend
   download_worker:
