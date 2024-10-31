@@ -3,6 +3,7 @@ from domain.entities.pipeline import Pipeline
 from domain.usecases.base_usecase import BaseUseCase
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from infrastructure.celery import (
+    aligner_transcriptome_task,
     convert_sra_to_fasta_task,
     download_genome_task,
     download_sra_task,
@@ -97,6 +98,13 @@ class PipelineCreateUseCase(BaseUseCase):
                 and created_pipeline.stage == PipelineStageEnum.CONVERTED
             )
 
+            pipeline_sra_files_read_to_align = (
+                self.pipeline_repository.is_all_sra_files_trimmed(
+                    pipeline_id=created_pipeline.id
+                )
+                and created_pipeline.stage == PipelineStageEnum.TRIMMED
+            )
+
             if pipeline_files_downloaded:
                 self.pipeline_repository.update_status(
                     created_pipeline.id, PipelineStageEnum.DOWNLOADED
@@ -125,8 +133,13 @@ class PipelineCreateUseCase(BaseUseCase):
                     "message": f"Your pipeline is already created, and are await to trimming.",
                     "pipeline_stage": created_pipeline.stage.value,
                 }
-            # elif created_pipeline.stage == PipelineStageEnum.TRIMMED:
-            #     self._align_transcriptomes(created_pipeline)
+            # trimmed pipeline
+            elif pipeline_sra_files_read_to_align:
+                self._align_transcriptomes(created_pipeline)
+                return {
+                    "message": f"Your pipeline is already created, and are await to alignment.",
+                    "pipeline_stage": created_pipeline.stage.value,
+                }
             # elif created_pipeline.stage == PipelineStageEnum.ALIGNED:
             #     self._normalize_transcriptomes(created_pipeline)
             # elif created_pipeline.stage == PipelineStageEnum.COUNTED:
@@ -153,6 +166,55 @@ class PipelineCreateUseCase(BaseUseCase):
         self._download_genome_and_transcriptome(pipeline)
 
         return pipeline
+
+    def _align_sra(
+        self,
+        sra_file: SRAFile,
+        pipeline_id: str,
+        genome_id: str,
+        organism_group: OrganinsGroupEnum,
+    ):
+        sra_id = sra_file.acession_number
+
+        genome_paths = self.storage_paths.get_genome_paths(genome_id)
+        aligner_paths = self.storage_paths.get_aligner_path(
+            pipeline_id, organism_group, sra_id
+        )
+
+        aligner_transcriptome_task(
+            pipeline_id=pipeline_id,
+            sra_id=sra_id,
+            organism_group=organism_group,
+            genome_index_path=genome_paths.index_path,
+            trimed_transcriptome_path=aligner_paths.input,
+            aligned_transcriptome_path=aligner_paths.output,
+        )
+
+    def _align_triplicate(
+        self,
+        triplicate: Triplicate,
+        pipeline_id: str,
+        genome_id: str,
+        organism_group: OrganinsGroupEnum,
+    ):
+        self._align_sra(triplicate.srr_1, pipeline_id, genome_id, organism_group)
+        self._align_sra(triplicate.srr_2, pipeline_id, genome_id, organism_group)
+        self._align_sra(triplicate.srr_3, pipeline_id, genome_id, organism_group)
+
+    def _align_transcriptomes(self, pipeline: Pipeline):
+        self._align_triplicate(
+            pipeline.control_organism,
+            pipeline.id,
+            pipeline.reference_genome.acession_number,
+            OrganinsGroupEnum.CONTROL,
+        )
+
+        self._align_triplicate(
+            pipeline.experiment_organism,
+            pipeline.id,
+            pipeline.reference_genome.acession_number,
+            OrganinsGroupEnum.EXPERIMENT,
+        )
 
     def _generate_genome_index(self, pipeline: Pipeline):
         paths = self.storage_paths.get_genome_paths(
