@@ -51,9 +51,8 @@ class TranscriptomeTrimming:
             sra_id=input.sra_id,
             organism_group=input.organism_group,
             genome_index_path=genome_paths.gtf_path,
-            genome_fasta_path=genome_paths.fasta_path,
-            transcriptome_trimed_path=input.output_path,
-            output_path=aligner_paths.output,
+            trimed_transcriptome_path=input.output_path,
+            aligned_transcriptome_path=aligner_paths.output,
         )
         print("Message sent to the alignment queue!")
 
