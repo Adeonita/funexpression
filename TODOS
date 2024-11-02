@@ -1,0 +1,161 @@
+Estruturação de diretório das pipelines
+pipelines
+    pipeline_id
+        converted
+            control
+                srr_id_dir
+                    srr_id_file.fasta
+            experiment
+        trimmed
+            control
+                srr_id_file_fq.gz
+            experiment
+        aligned
+            control
+            experiment
+        counted
+            control
+            experiment
+        DE
+            result
+
+-------- Objeto no banco -----------------
+
+{
+    "pipeline_id": "pipeline_id",
+    "run_id": "test-610f6a8d-854e-4346-87e2-2dbc4a70c3a9"
+    "email": "test.class@gmail.com"
+    "stage": "DOWNLOADED",
+    "control_organism": [
+        {
+            "acession_number": "SRR10042980"
+            "status": "CONVERTED",
+            "converted_path": "path/to/control/converted"
+            "trimmed_path": "path/to/control/trimmed"
+            "aligned_path": "path/to/control/aligned",
+            "counted_path": "path/to/control/counted"
+
+        },
+        {
+            "acession_number": "SRR10042981"
+            "status": "CONVERTED"
+        },
+        {
+            "acession_number": "SRR10042982"
+            "status": "CONVERTED"
+        }
+    ]
+}
+
+*/
+
+----------------------------------------------------------------------------
+- Os sistemas atuais enviam os erros para o e-mail do usuário 
+- Enviar o email pro usuário informando o JobId informando o tempo médio de processamento
+- Tratar o caminho feliz por enquanto
+
+
+----------------------------------------------------------------------------
+    -------------------------------- STAR --------------------------------
+
+            ---------------- STAR - GENOME_INDEX ----------------
+            
+                STAR --runThreadN 4 \
+                --runMode genomeGenerate \
+                --genomeDir /caminho/para/diretorio_genoma \
+                --genomeFastaFiles /caminho/para/genoma.fasta \
+                --sjdbGTFfile /caminho/para/genes.gtf \
+                --sjdbOverhang 100
+
+                --runThreadN 4: Número de threads a serem usados (ajuste conforme o poder de processamento).
+                --genomeDir: O diretório onde o índice do genoma será salvo.
+                --genomeFastaFiles: Arquivo FASTA do genoma.
+                --sjdbGTFfile: Arquivo GTF de anotação (como os genes no genoma).
+                --sjdbOverhang: Define o tamanho da leitura menos 1 (normalmente 100 para leituras de 101 pb).
+       
+
+     ---------------- STAR - GENOME_ALIGNER ----------------
+                STAR --runThreadN 4 \
+                --genomeDir /caminho/para/indice_do_genoma/ \
+                --readFilesIn /caminho/para/leitura_single_end.fq.gz \
+                --readFilesCommand zcat \  # Este comando descomprime os arquivos .gz
+                --outFileNamePrefix /caminho/para/resultados/alinhamento_ \
+                --outSAMtype BAM SortedByCoordinate
+                
+                --runThreadN 4: Número de threads (núcleos da CPU) a serem usados. Ajuste conforme seu hardware para aumentar a velocidade do alinhamento.
+                --genomeDir: Caminho para o diretório contendo os arquivos de índice do genoma que foram previamente gerados.
+                --readFilesIn: Caminho para o arquivo FASTQ de leitura single-end.
+                Se o arquivo estiver comprimido (como .gz), use --readFilesCommand zcat para descomprimí-lo durante o alinhamento.
+                --outFileNamePrefix: Caminho e prefixo para os arquivos de saída. O STAR gerará múltiplos arquivos de saída com esse prefixo.
+                --outSAMtype BAM SortedByCoordinate: O formato de saída será BAM (compactado) e classificado por coordenadas genômicas. Esta opção gera um arquivo BAM ordenado que pode ser diretamente usado para visualização ou para análises downstream.
+
+
+                TEST COMMANDS
+                --------- INDEX ---------
+                STAR --runThreadN 4 \
+                --runMode genomeGenerate \
+                --genomeDir ./temp_files/GCA_000346795.1_index \
+                --genomeFastaFiles ./temp_files/GCA_000346795.1.fna \
+                --sjdbGTFfile ./temp_files/GCA_000346795.1.gtf \
+                --sjdbOverhang 100
+
+                --------- ALIGNER ---------
+
+                STAR --runThreadN 4 \
+                --genomeDir ./temp_files/GCA_000346795.1_index \
+                --readFilesIn ./pipelines/6711b33e2cda2f3664262e36/TRIMMED/CONTROL/SRR10042980.fq.gz \
+                --readFilesCommand zcat \
+                --outFileNamePrefix ./pipelines/6711b33e2cda2f3664262e36/ALIGNER/CONTROL/SRR10042980_ \
+                --outSAMtype BAM SortedByCoordinate
+
+                
+                ##descrição dos comandos
+                --runThreadN 4: Número de threads (núcleos da CPU) a serem usados. Ajuste conforme seu hardware para aumentar a velocidade do alinhamento.
+                --genomeDir: Caminho para o diretório contendo os arquivos de índice do genoma que foram previamente gerados.
+                --readFilesIn: Caminho para o arquivo FASTQ de leitura single-end.
+                Se o arquivo estiver comprimido (como .gz), use --readFilesCommand zcat para descomprimí-lo durante o alinhamento.
+                --outFileNamePrefix: Caminho e prefixo para os arquivos de saída. O STAR gerará múltiplos arquivos de saída com esse prefixo.
+                --outSAMtype BAM SortedByCoordinate: O formato de saída será BAM (compactado) e classificado por coordenadas genômicas. Esta opção gera um arquivo BAM ordenado que pode ser diretamente usado para visualização ou para análises downstream.
+
+                !!!!! WARNING: --genomeSAindexNbases 14 is too large for the genome size=30177368, which may cause seg-fault at the mapping step. Re-run genome generation with recommended --genomeSAindexNbases 11
+
+
+
+
+
+                024-10-31 08:46:59 
+2024-10-31 08:46:59 ReadAlignChunk_processChunks.cpp:204:processChunks EXITING because of FATAL ERROR in input reads: wrong read ID line format: the read ID lines should start with @ or > 
+2024-10-31 08:46:59 Offending line for read # 1
+2024-10-31 08:46:59 ���v#��56�OAN�*�d�l2����� 
+2024-10-31 08:46:59 SOLUTION: verify and correct the input read files
+2024-10-31 08:46:59 
+2024-10-31 08:46:59 Oct 31 11:46:59 ...... FATAL ERROR, exiting
+
+
+
+STAR --runThreadN 4 \
+--genomeDir ./temp_files/GCA_000346795.1_index \
+--readFilesIn ./pipelines/6711b33e2cda2f3664262e36/TRIMMED/CONTROL/SRR10042980.fq.gz \
+--readFilesCommand zcat \
+--outFileNamePrefix ./pipelines/6711b33e2cda2f3664262e36/ALIGNER/CONTROL/SRR10042980_ \
+--outSAMtype BAM SortedByCoordinate
+
+STAR --runThreadN 4 \
+--genomeDir ./temp_files/GCA_000346795.1_index \
+--readFilesIn ./pipelines/671d898d37785a923ae7d1cf/TRIMMED/EXPERIMENT/SRR10042986.fq.gz \
+--readFilesCommand zcat \
+--outFileNamePrefix ./pipelines/671d898d37785a923ae7d1cf/ALIGNER/EXPERIMENT/SRR10042986_ \
+--outSAMtype BAM SortedByCoordinate \
+--outStd Log #loga o progresso
+
+2024-10-31 09:29:55 [2024-10-31 12:29:54,815: CRITICAL/MainProcess] Unrecoverable error: PreconditionFailed(406, 'PRECONDITION_FAILED - delivery acknowledgement on channel 1 timed out. Timeout value used: 1800000 ms. This timeout value can be configured, see consumers doc guide to learn more', (0, 0), '')
+
+
+raise error_for_code(
+2024-10-31 09:29:55 amqp.exceptions.PreconditionFailed: (0, 0): (406) PRECONDITION_FAILED - delivery acknowledgement on channel 1 timed out. Timeout value used: 1800000 ms. This timeout value can be configured, see consumers doc guide to learn more)
+
+
+mongodb://root:example@localhost:27017/
+
+#docker stop genome_download_worker conversion_worker trimming_worker download_worker generate_index_genome_worker aligner_worker
+
