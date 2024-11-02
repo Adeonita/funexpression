@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
+from domain.entities.de_metadata import DEMetadataStageEnum
 from domain.entities.genome import Genome, GenomeFiles, GenomeStatusEnum
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from domain.entities.triplicate import SRAFile, SRAFileStatusEnum, Triplicate
@@ -13,6 +14,7 @@ class Pipeline:
     control_organism: Triplicate
     experiment_organism: Triplicate
     reference_genome: Genome
+    de_metadata_stage: DEMetadataStageEnum
     id: Optional[int] = None
 
     def to_json(self):
@@ -58,6 +60,7 @@ class Pipeline:
                     "index": self.reference_genome.genome_files.index.value,
                 },
             },
+            "de_metadata_stage": self.de_metadata_stage.value,
         }
 
     @staticmethod
@@ -134,4 +137,5 @@ class Pipeline:
                     ],
                 ),
             ),
+            de_metadata_stage=DEMetadataStageEnum[json["de_metadata_stage"]],
         )

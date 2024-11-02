@@ -1,5 +1,6 @@
 from typing import List, Protocol
 from application.interfaces.expression_request_payload import Triplicate
+from domain.entities.de_metadata import DEMetadataStageEnum
 from domain.entities.genome import Genome, GenomeFilesEnum, GenomeStatusEnum
 from domain.entities.pipeline import Pipeline
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
@@ -16,6 +17,7 @@ class PipelineRepositoryPort(Protocol):
         control_organism: Triplicate,
         experiment_organism: Triplicate,
         reference_genome_acession_number: Genome,
+        de_metadata_stage: DEMetadataStageEnum,
     ) -> Pipeline:
         pass
 
