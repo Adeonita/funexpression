@@ -3,6 +3,7 @@ from domain.entities.genome import GenomeStatusEnum
 from domain.entities.pipeline import Pipeline
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from domain.entities.triplicate import SRAFileStatusEnum
+from domain.tasks.pipeline_task import PipelineTask
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
 )
@@ -10,8 +11,11 @@ from ports.infrastructure.repositories.pipeline_repository_port import (
 
 class PipelineGateway:
 
-    def __init__(self, pipeline_repository: PipelineRepositoryPort):
+    def __init__(
+        self, pipeline_repository: PipelineRepositoryPort, pipeline_task: PipelineTask
+    ):
         self.pipeline_repository = pipeline_repository
+        self.pipeline_task = pipeline_task
 
     def handle(self, pipeline: Pipeline):
 
@@ -125,8 +129,6 @@ class PipelineGateway:
 
         files_already_done_to_align = sra_files_trimmed and is_index_genome_generated
 
-        print("files_already_done_to_align", files_already_done_to_align)
-
         if files_already_done_to_align and pipeline.stage == PipelineStageEnum.TRIMMED:
             return True
 
@@ -134,6 +136,8 @@ class PipelineGateway:
             files_already_done_to_align
             and pipeline.stage == PipelineStageEnum.CONVERTED
         ):
+            self.pipeline_task.aling_transcriptomes(pipeline)
+
             self.pipeline_repository.update_status(
                 pipeline_id=pipeline.id,
                 pipeline_stage=PipelineStageEnum.TRIMMED,

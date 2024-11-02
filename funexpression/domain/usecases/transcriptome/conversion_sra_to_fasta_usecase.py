@@ -22,13 +22,11 @@ class ConversionSraToFastaUseCase:
 
     def execute(self, sra_id, pipeline_id, organism_group):
 
-        output_dir = self.storage_paths._create_outdir_if_not_exist(
-            pipeline_id, PipelineStageEnum.CONVERTED.value, organism_group, sra_id
-        )
+        paths = self.storage_paths.get_converting_paths(pipeline_id=pipeline_id, organism_group=organism_group, sra_id=sra_id)
+        output_dir = paths.output
 
         if output_dir is not None:
-            # TODO: remover após os testes
-            # self.fasterq_dump_adapter.dump_sra_to_fasta(sra_id, output_dir)
+            self.fasterq_dump_adapter.dump_sra_to_fasta(sra_id, output_dir)
 
             self.pipeline_repository.update_sra_file_status(
                 pipeline_id=pipeline_id,

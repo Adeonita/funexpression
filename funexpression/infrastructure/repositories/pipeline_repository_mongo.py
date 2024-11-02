@@ -138,6 +138,11 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
                     pipeline_id, {"reference_genome.genome_files.fasta": file_status}
                 )
                 return
+            elif file == GenomeFilesEnum.INDEX:
+                self.database.updateById(
+                    pipeline_id, {"reference_genome.genome_files.index": file_status}
+                )
+                return
         except Exception as e:
             print(f"Ocurre an error when try update genome file: --> {str(e)}")
 
