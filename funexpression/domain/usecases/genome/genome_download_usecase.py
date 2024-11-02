@@ -32,17 +32,7 @@ class GenomeDownloadUseCase(BaseUseCase):
 
         print(f"Processing download for {genome_id}")
 
-        # TODO: descomentar após os testes
-        # downloaded = self.genbank_adapter.get_gtf_and_fasta_genome_from_ncbi(genome_id)
-
-        # TODO: remover após os testes e manter o uso do storage paths
-        # downloaded = {
-        #     "gtf_path": f"./temp_files/{genome_id}.gtf",
-        #     "fasta_path": f"./temp_files/{genome_id}.fasta",
-        # }
-
-        # gtf_genome = downloaded.get("gtf_path")
-        # fasta_genome = downloaded.get("fasta_path")
+        self.genbank_adapter.get_gtf_and_fasta_genome_from_ncbi(genome_id)
 
         genome_paths = self.storage_paths.get_genome_paths(genome_id)
 
