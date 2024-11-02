@@ -1,5 +1,6 @@
 from typing import List
 from bson import ObjectId
+from domain.entities.de_metadata import DEMetadataStageEnum
 from domain.entities.genome import Genome, GenomeFilesEnum, GenomeStatusEnum
 from domain.entities.pipeline import Pipeline
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
@@ -24,6 +25,7 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
         control_organism: Triplicate,
         experiment_organism: Triplicate,
         reference_genome: Genome,
+        de_metadata_stage: DEMetadataStageEnum,
     ) -> Pipeline:
         pipeline = Pipeline(
             email=email,
@@ -32,6 +34,7 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
             control_organism=control_organism,
             experiment_organism=experiment_organism,
             reference_genome=reference_genome,
+            de_metadata_stage=de_metadata_stage,
         )
 
         pipeline_id = self.database.create("pipelines", pipeline.to_json())

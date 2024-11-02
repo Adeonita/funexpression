@@ -39,7 +39,7 @@ class GenomeAlignerUseCase(BaseUseCase):
         if self.pipeline_repository.is_all_sra_files_aligned(input.pipeline_id):
             self.pipeline_repository.update_status(
                 pipeline_id=input.pipeline_id,
-                status=PipelineStageEnum.ALIGNED,
+                pipeline_stage=PipelineStageEnum.ALIGNED,
             )
 
             print("Aligner step done!")

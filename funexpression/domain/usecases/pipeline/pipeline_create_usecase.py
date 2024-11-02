@@ -1,7 +1,9 @@
+from domain.entities.de_metadata import DEMetadataStageEnum
 from domain.entities.genome import Genome, GenomeFiles, GenomeStatusEnum
 from domain.entities.pipeline import Pipeline
 from domain.usecases.base_usecase import BaseUseCase
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
+from domain.usecases.pipeline.pipeline_gateway import PipelineGateway
 from infrastructure.celery import (
     aligner_transcriptome_task,
     convert_sra_to_fasta_task,
@@ -32,120 +34,18 @@ class PipelineCreateUseCase(BaseUseCase):
         self,
         pipeline_repository: PipelineRepositoryPort,
         storage_paths: StoragePathsPort,
+        pipeline_gateway: PipelineGateway,
     ):
         self.pipeline_repository = pipeline_repository
         self.storage_paths = storage_paths
+        self.pipeline_gateway = pipeline_gateway
 
     def execute(self, input: PipelineCreateUseCaseInput):
         created_pipeline = self._find_pipeline(input)
 
         if created_pipeline:
             created_pipeline = Pipeline.from_json(created_pipeline)
-
-            pipeline_genome_files_downloaded = (
-                created_pipeline.reference_genome.genome_files.fasta
-                == GenomeStatusEnum.DOWNLOADED
-                and created_pipeline.reference_genome.genome_files.gtf
-                == GenomeStatusEnum.DOWNLOADED
-            )
-
-            pipeline_read_to_generate_genome_index = (
-                created_pipeline.stage == PipelineStageEnum.PENDING
-                and pipeline_genome_files_downloaded
-            )
-
-            if pipeline_read_to_generate_genome_index:
-                # genome files already downloaded
-                self._generate_genome_index(created_pipeline)
-
-                return {
-                    "message": "Your pipeline is awaiting to generate genome index, please wait a moment",
-                    "pipeline_stage": created_pipeline.stage.value,
-                }
-
-            sra_files_download_completed = (
-                self.pipeline_repository.is_all_file_download_downloaded(
-                    created_pipeline.id
-                )
-            )
-
-            pipeline_sra_files_download_pending = (
-                created_pipeline.stage == PipelineStageEnum.PENDING
-                and not sra_files_download_completed
-            )
-
-            if pipeline_sra_files_download_pending:
-                return {
-                    "message": "Your pipeline is awaiting download the sra files, please wait a moment",
-                    "pipeline_stage": created_pipeline.stage.value,
-                }
-                # I will should be some thing?
-
-            pipeline_files_downloaded = (
-                created_pipeline.stage == PipelineStageEnum.PENDING
-                and sra_files_download_completed
-            )
-
-            pipeline_sra_files_read_to_convert = (
-                created_pipeline.stage == PipelineStageEnum.DOWNLOADED
-                and sra_files_download_completed
-            )
-
-            pipeline_sra_files_read_to_trimming = (
-                self.pipeline_repository.is_all_file_download_converted(
-                    pipeline_id=created_pipeline.id
-                )
-                and created_pipeline.stage == PipelineStageEnum.CONVERTED
-            )
-
-            pipeline_sra_files_read_to_align = (
-                self.pipeline_repository.is_all_sra_files_trimmed(
-                    pipeline_id=created_pipeline.id
-                )
-                and created_pipeline.stage == PipelineStageEnum.TRIMMED
-            )
-
-            if pipeline_files_downloaded:
-                self.pipeline_repository.update_status(
-                    created_pipeline.id, PipelineStageEnum.DOWNLOADED
-                )
-
-                self._convert_transcriptomes(created_pipeline)
-
-                return {
-                    "message": f"Your pipeline is already created, and the sra files are awaiting was sent to conversion",
-                    "pipeline_stage": created_pipeline.stage.value,
-                }
-            # downloaded pipeline
-            elif pipeline_sra_files_read_to_convert:
-                self._convert_transcriptomes(created_pipeline)
-                return {
-                    "message": f"Your pipeline is already created, and are await to conversion.",
-                    "pipeline_stage": created_pipeline.stage.value,
-                }
-            # converted pipeline
-            elif pipeline_sra_files_read_to_trimming:
-                self.pipeline_repository.update_status(
-                    created_pipeline.id, PipelineStageEnum.TRIMMED
-                )
-                self._trimming_transcriptomes(created_pipeline)
-                return {
-                    "message": f"Your pipeline is already created, and are await to trimming.",
-                    "pipeline_stage": created_pipeline.stage.value,
-                }
-            # trimmed pipeline
-            elif pipeline_sra_files_read_to_align:
-                self._align_transcriptomes(created_pipeline)
-                return {
-                    "message": f"Your pipeline is already created, and are await to alignment.",
-                    "pipeline_stage": created_pipeline.stage.value,
-                }
-            # elif created_pipeline.stage == PipelineStageEnum.ALIGNED:
-            #     self._normalize_transcriptomes(created_pipeline)
-            # elif created_pipeline.stage == PipelineStageEnum.COUNTED:
-            #     self._differential_expression(created_pipeline)
-            # elif created_pipeline.stage == PipelineStageEnum.DIFFERENTIAL_EXPRESSION:
-            #     self._send_email(created_pipeline)
+            return self.pipeline_gateway.handle(created_pipeline)
 
         experiment_organism = self._get_experiment_organism(input)
         control_organism = self._get_control_organism(input)
@@ -158,6 +58,7 @@ class PipelineCreateUseCase(BaseUseCase):
             experiment_organism=experiment_organism,
             control_organism=control_organism,
             reference_genome=reference_genome,
+            de_metadata_stage=DEMetadataStageEnum.PENDING,
         )
 
         # self._download_transcriptomes(pipeline)
