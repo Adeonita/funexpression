@@ -4,6 +4,14 @@ from infrastructure.celery import convert_sra_to_fasta_task
 
 
 class TranscripomeConvertTask:
+    def convert_transcriptomes(self, pipeline: Pipeline):
+        self._convert_triplicate(
+            pipeline.experiment_organism, pipeline.id, OrganinsGroupEnum.EXPERIMENT
+        )
+        self._convert_triplicate(
+            pipeline.control_organism, pipeline.id, OrganinsGroupEnum.CONTROL
+        )
+
     def _convert_sra_to_fasta(
         self, sra_file: SRAFile, pipeline_id: str, organism_group: str
     ):
@@ -17,11 +25,3 @@ class TranscripomeConvertTask:
         self._convert_sra_to_fasta(tri.srr_1, pipeline_id, organism_group)
         self._convert_sra_to_fasta(tri.srr_2, pipeline_id, organism_group)
         self._convert_sra_to_fasta(tri.srr_3, pipeline_id, organism_group)
-
-    def _convert_transcriptomes(self, pipeline: Pipeline):
-        self._convert_triplicate(
-            pipeline.experiment_organism, pipeline.id, OrganinsGroupEnum.EXPERIMENT
-        )
-        self._convert_triplicate(
-            pipeline.control_organism, pipeline.id, OrganinsGroupEnum.CONTROL
-        )

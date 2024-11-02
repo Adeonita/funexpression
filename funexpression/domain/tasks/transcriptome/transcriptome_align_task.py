@@ -1,9 +1,28 @@
 from domain.entities.pipeline import Pipeline
 from domain.entities.triplicate import OrganinsGroupEnum, SRAFile, Triplicate
 from infrastructure.celery import aligner_transcriptome_task
+from ports.infrastructure.storage.storage_path_port import StoragePathsPort
 
 
 class TranscripomeAlignTask:
+    def __init__(self, storage_paths: StoragePathsPort):
+        self.storage_paths = storage_paths
+
+    def align_transcriptomes(self, pipeline: Pipeline):
+        self._align_triplicate(
+            pipeline.control_organism,
+            pipeline.id,
+            pipeline.reference_genome.acession_number,
+            OrganinsGroupEnum.CONTROL,
+        )
+
+        self._align_triplicate(
+            pipeline.experiment_organism,
+            pipeline.id,
+            pipeline.reference_genome.acession_number,
+            OrganinsGroupEnum.EXPERIMENT,
+        )
+
     def _align_sra(
         self,
         sra_file: SRAFile,
@@ -37,18 +56,3 @@ class TranscripomeAlignTask:
         self._align_sra(triplicate.srr_1, pipeline_id, genome_id, organism_group)
         self._align_sra(triplicate.srr_2, pipeline_id, genome_id, organism_group)
         self._align_sra(triplicate.srr_3, pipeline_id, genome_id, organism_group)
-
-    def _align_transcriptomes(self, pipeline: Pipeline):
-        self._align_triplicate(
-            pipeline.control_organism,
-            pipeline.id,
-            pipeline.reference_genome.acession_number,
-            OrganinsGroupEnum.CONTROL,
-        )
-
-        self._align_triplicate(
-            pipeline.experiment_organism,
-            pipeline.id,
-            pipeline.reference_genome.acession_number,
-            OrganinsGroupEnum.EXPERIMENT,
-        )

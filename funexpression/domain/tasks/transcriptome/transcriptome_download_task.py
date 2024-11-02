@@ -4,7 +4,7 @@ from infrastructure.celery import download_sra_task
 
 
 class TranscriptomeDownloadTask:
-    def _download_transcriptomes(self, pipeline: Pipeline):
+    def download_transcriptomes(self, pipeline: Pipeline):
         self._download_triplicate(
             pipeline.control_organism, pipeline.id, OrganinsGroupEnum.CONTROL
         )
