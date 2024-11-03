@@ -137,6 +137,19 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=aligner_transcriptome", "--concurrency=3"]
 
+# the image is used to run worker for count transcriptomes
+FROM python:3.11-slim-buster as counter_worker
+
+ENV VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:/app:$PATH"
+
+WORKDIR /funexpression
+
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+
+
+ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=count_worker", "--concurrency=3"]
+
 
 
 # the image is used to run worker for aligner transcriptomes

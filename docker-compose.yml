@@ -111,6 +111,22 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
+  counter_worker:
+    platform: linux/amd64
+    container_name: counter_worker
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: counter_worker
+    depends_on:
+      - web
+    volumes:
+      - ./funexpression:/funexpression
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=pass
+    networks:
+      - backend
   generate_index_genome_worker:
     platform: linux/amd64
     container_name: generate_index_genome_worker
