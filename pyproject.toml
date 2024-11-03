@@ -13,6 +13,7 @@ python-dotenv = "^1.0.1"
 celery = {extras = ["rabbitmq"], version = "^5.4.0"}
 pysondb = "^1.6.7"
 pymongo = "^4.10.1"
+htseq = "^2.0.9"
 
 
 [build-system]
