@@ -31,6 +31,11 @@ class StoragePathsPort(Protocol):
     ) -> Paths:
         pass
 
+    def get_counting_path(
+        self, pipeline_id: str, organism_group: str, sra_id: str
+    ) -> Paths:
+        pass
+
     def _create_outdir_if_not_exist(
         self, pipeline_id: str, step: str, group: str, sra_id=None
     ):

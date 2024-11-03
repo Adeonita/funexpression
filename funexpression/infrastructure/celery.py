@@ -97,3 +97,29 @@ def aligner_transcriptome_task(
     )
 
     print("Message sent to the aligner genome queue!")
+
+
+def count_transcriptome_task(
+    pipeline_id,
+    sra_id,
+    organism_group,
+    aligned_transcriptome_path,
+    gtf_genome_path,
+    counted_transcriptome_path,
+):
+    print("Sending to the counter genome queue...")
+
+    app.send_task(
+        "infrastructure.messaging.task.count_transcriptome",
+        args=(
+            pipeline_id,
+            sra_id,
+            organism_group,
+            aligned_transcriptome_path,
+            gtf_genome_path,
+            counted_transcriptome_path,
+        ),
+        queue="count_transcriptome",
+    )
+
+    print("Message sent to the counter genome queue!")

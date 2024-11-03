@@ -4,6 +4,7 @@ from domain.usecases.base_usecase import BaseUseCase
 from domain.usecases.genome.input.genome_aligner_usecase_input import (
     GenomeAlignerUseCaseInput,
 )
+from infrastructure.celery import count_transcriptome_task
 from ports.infrastructure.aligner.aligner_port import AlignerPort
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
@@ -36,6 +37,25 @@ class GenomeAlignerUseCase(BaseUseCase):
             status=SRAFileStatusEnum.ALIGNED,
         )
 
+        # TODO: add genome_id to the input
+        genome_id = self.pipeline_repository.get_genome_id_by_pipeline(
+            input.pipeline_id
+        )
+
+        genome_paths = self.storage_paths.get_genome_paths(genome_id)
+        counted_transcriptome_path = self.storage_paths.get_counting_path(
+            input.pipeline_id, input.organism_group, input.sra_id
+        )
+
+        count_transcriptome_task(
+            pipeline_id=input.pipeline_id,
+            sra_id=input.sra_id,
+            organism_group=input.organism_group,
+            aligned_transcriptome_path=counted_transcriptome_path.input,
+            gtf_genome_path=genome_paths.gtf_path,
+            counted_transcriptome_path=counted_transcriptome_path.output,
+        )
+
         if self.pipeline_repository.is_all_sra_files_aligned(input.pipeline_id):
             self.pipeline_repository.update_status(
                 pipeline_id=input.pipeline_id,
@@ -43,4 +63,3 @@ class GenomeAlignerUseCase(BaseUseCase):
             )
 
             print("Aligner step done!")
-            # TODO: send message to count queue
