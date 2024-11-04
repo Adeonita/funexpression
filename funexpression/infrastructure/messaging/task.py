@@ -9,6 +9,9 @@ from domain.factories.genome_generate_index_usecase_factory import (
 from domain.factories.transcriptome.conversion_sra_to_fasta_usecase_factory import (
     ConversionSraToFastaUseCaseFactory,
 )
+from domain.factories.transcriptome.transcriptome_counting_usecase_factory import (
+    TranscriptomeCountingUseCaseFactory,
+)
 from domain.factories.transcriptome.transcriptome_download_usecase_factory import (
     TranscriptomeDownloadUseCaseFactory,
 )
@@ -26,6 +29,9 @@ from domain.usecases.genome.input.genome_generate_index_usecase_input import (
 )
 from domain.usecases.transcriptome.input.conversion_sra_to_fasta_usecase_input import (
     ConversionSraToFastaUseCaseInput,
+)
+from domain.usecases.transcriptome.input.counting_transcriptome_usecase import (
+    TranscriptomeCountUseCaseInput,
 )
 from domain.usecases.transcriptome.input.transcriptome_download_usecase_input import (
     TranscriptomeDownloadUseCaseInput,
@@ -149,3 +155,28 @@ class Task(TaskPort):
             genome_aligner_usecase.execute(input)
         except Exception as e:
             return f"there was an error when align genome {e}"
+
+    @app.task(bind=True, queue="counter_transcriptome")
+    def counter_transcriptome(
+        self,
+        pipeline_id: str,
+        sra_id: str,
+        organism_group: OrganinsGroupEnum,
+        aligned_transcriptome_path: str,
+        gtf_genome_file_path: str,
+        counted_transcriptome_path: str,
+    ):
+        try:
+            input = TranscriptomeCountUseCaseInput(
+                pipeline_id=pipeline_id,
+                sra_id=sra_id,
+                organism_group=organism_group,
+                aligned_transcriptome_path=aligned_transcriptome_path,
+                gtf_genome_file_path=gtf_genome_file_path,
+                counted_transcriptome_path=counted_transcriptome_path,
+            )
+
+            transcriptome_count_usecase = TranscriptomeCountingUseCaseFactory.create()
+            transcriptome_count_usecase.execute(input)
+        except Exception as e:
+            return f"there was an error when count transcriptome {e}"
