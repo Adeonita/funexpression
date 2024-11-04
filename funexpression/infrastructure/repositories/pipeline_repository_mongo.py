@@ -275,6 +275,13 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
 
         return True if result else False
 
+    def is_all_sra_files_counted(self, pipeline_id: str) -> bool:
+        result = self._get_pipeline_by_sra_state(
+            pipeline_id, SRAFileStatusEnum.COUNTED.value
+        )
+
+        return True if result else False
+
     def get_sra_files(self, pipeline_id: str) -> List[str]:
         pipeline = self.get(pipeline_id)
 
