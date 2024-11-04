@@ -4,7 +4,7 @@ from domain.usecases.base_usecase import BaseUseCase
 from domain.usecases.genome.input.genome_aligner_usecase_input import (
     GenomeAlignerUseCaseInput,
 )
-from infrastructure.celery import count_transcriptome_task
+from infrastructure.celery import counter_transcriptome_task
 from ports.infrastructure.aligner.aligner_port import AlignerPort
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
@@ -47,7 +47,7 @@ class GenomeAlignerUseCase(BaseUseCase):
             input.pipeline_id, input.organism_group, input.sra_id
         )
 
-        count_transcriptome_task(
+        counter_transcriptome_task(
             pipeline_id=input.pipeline_id,
             sra_id=input.sra_id,
             organism_group=input.organism_group,
