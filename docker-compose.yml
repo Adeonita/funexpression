@@ -127,6 +127,22 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
+  diffed_worker:
+    platform: linux/amd64
+    container_name: diffed_worker
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: diffed_worker
+    depends_on:
+      - web
+    volumes:
+      - ./funexpression:/funexpression
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=pass
+    networks:
+      - backend
   generate_index_genome_worker:
     platform: linux/amd64
     container_name: generate_index_genome_worker
