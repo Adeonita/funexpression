@@ -53,11 +53,10 @@ class PipelineCreateUseCase(BaseUseCase):
             de_metadata_stage=DEMetadataStageEnum.PENDING,
         )
 
-        # self._download_transcriptomes(pipeline)
         self.storage_paths.create_pipeline_directory_structure(pipeline_id=pipeline.id)
 
-        self._download_genome_and_transcriptome(pipeline)
 
+        self.pipeline_gateway.start(pipeline)
         return pipeline
 
 

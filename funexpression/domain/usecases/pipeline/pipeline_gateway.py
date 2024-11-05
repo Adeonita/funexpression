@@ -9,7 +9,7 @@ from ports.infrastructure.repositories.pipeline_repository_port import (
 )
 
 
-class PipelineGateway:
+class  PipelineGateway:
 
     def __init__(
         self, pipeline_repository: PipelineRepositoryPort, pipeline_task: PipelineTask
@@ -17,7 +17,15 @@ class PipelineGateway:
         self.pipeline_repository = pipeline_repository
         self.pipeline_task = pipeline_task
 
+    def start(self, pipeline: Pipeline):
+        self.pipeline_task.start(pipeline=pipeline)
+
     def handle(self, pipeline: Pipeline):
+        if self._is_ready_to_download(pipeline):
+            return {
+                "message": f"Your pipeline is already created, and the sra files are awaiting was sent to downloading",
+                "pipeline_stage": pipeline.stage.value,
+            }
 
         if self._is_ready_to_converter(pipeline):
             return {
@@ -82,12 +90,21 @@ class PipelineGateway:
             and pipeline.experiment_organism.srr_3.status == status
         )
 
+    def _is_ready_to_download(self, pipeline:Pipeline):
+        sra_files_pending = self._is_completed_sra_files_by_status(
+            pipeline, SRAFileStatusEnum.PENDING
+        )
+
+        if sra_files_pending:
+            return True
+
     def _is_ready_to_converter(self, pipeline: Pipeline):
         sra_files_downloaded = self._is_completed_sra_files_by_status(
             pipeline, SRAFileStatusEnum.DOWNLOADED
         )
 
         if sra_files_downloaded and pipeline.stage == PipelineStageEnum.DOWNLOADED:
+            self.pipeline_task.convert_transcripomes(pipeline=pipeline)
             return True
 
         if sra_files_downloaded and pipeline.stage == PipelineStageEnum.PENDING:
@@ -106,6 +123,7 @@ class PipelineGateway:
         )
 
         if sra_files_converted and pipeline.stage == PipelineStageEnum.CONVERTED:
+            self.pipeline_task.trimming_transcriptomes(pipeline)
             return True
 
         if sra_files_converted and pipeline.stage == PipelineStageEnum.DOWNLOADED:
@@ -130,6 +148,8 @@ class PipelineGateway:
         files_already_done_to_align = sra_files_trimmed and is_index_genome_generated
 
         if files_already_done_to_align and pipeline.stage == PipelineStageEnum.TRIMMED:
+            self.pipeline_task.aling_transcriptomes(pipeline)
+
             return True
 
         if (

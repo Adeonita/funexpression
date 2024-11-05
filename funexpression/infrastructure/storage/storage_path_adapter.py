@@ -20,13 +20,14 @@ class StoragePathsAdapter(StoragePathsPort):
     def get_converting_paths(self, pipeline_id, organism_group, sra_id):
         return Paths(
             input=f"pipelines/{pipeline_id}/DOWNLOADED/{organism_group}/{sra_id}.sra",
-            output=f"pipelines/{pipeline_id}/CONVERTED/{organism_group}/{sra_id}.fastq",
+            #output=f"pipelines/{pipeline_id}/CONVERTED/{organism_group}/{sra_id}.fastq",
+            output=f"pipelines/{pipeline_id}/CONVERTED/{organism_group}/{sra_id}",
         )
 
     def get_trimming_paths(self, pipeline_id, organism_group, sra_id) -> Paths:
         return Paths(
-            input=f"pipelines/{pipeline_id}/CONVERTED/{organism_group}/{sra_id}/{sra_id}.fastq",
-            output=f"pipelines/{pipeline_id}/TRIMMED/{organism_group}/{sra_id}.fq.gz",
+            input=f"./pipelines/{pipeline_id}/CONVERTED/{organism_group}/{sra_id}/{sra_id}.fastq",
+            output=f"./pipelines/{pipeline_id}/TRIMMED/{organism_group}/{sra_id}.fq.gz",
         )
 
     def get_aligner_path(self, pipeline_id: str, organism_group: str, sra_id: str):

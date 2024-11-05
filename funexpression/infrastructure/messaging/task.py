@@ -81,7 +81,7 @@ class Task(TaskPort):
         except Exception as e:
             return f"there was an error when downloading sra sequence {e}"
 
-    @app.task(bind=True, queue="trimming_transcriptome")
+    @app.task(bind=True, queue="trimming_transcriptome", max_retries=3)
     def trimming_transcriptome(
         self,
         pipeline_id: str,
@@ -103,6 +103,8 @@ class Task(TaskPort):
             trimming_usecase = TranscriptomeTrimmingUseCaseFactory.create()
             trimming_usecase.execute(input)
         except Exception as e:
+            self.retry(countdown=3**self.request.retry)
+            print(f"retry trimming to {sra_id}")
             return f"there was an error when trimming the transcriptome {e}"
 
     @app.task(bind=True, queue="generate_index_genome")
@@ -130,7 +132,7 @@ class Task(TaskPort):
             return f"there was an error when downloading genome {e}"
         pass
 
-    @app.task(bind=True, queue="aligner_transcriptome")
+    @app.task(bind=True, queue="aligner_transcriptome", max_retries=3)
     def aligner_transcriptome(
         self,
         pipeline_id: str,
@@ -154,9 +156,11 @@ class Task(TaskPort):
             genome_aligner_usecase = GenomeAlignerUseCaseFactory.create()
             genome_aligner_usecase.execute(input)
         except Exception as e:
+            self.retry(countdown=3**self.request.retry)
+            print(f"re-enqueue to align transcriptome: {sra_id}")
             return f"there was an error when align genome {e}"
 
-    @app.task(bind=True, queue="counter_transcriptome")
+    @app.task(bind=True, queue="counter_transcriptome", retry_kwargs={'max_retries': 5, 'countdown': 2})
     def counter_transcriptome(
         self,
         pipeline_id: str,

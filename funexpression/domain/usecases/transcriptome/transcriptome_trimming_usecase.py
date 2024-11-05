@@ -50,7 +50,7 @@ class TranscriptomeTrimming:
             pipeline_id=input.pipeline_id,
             sra_id=input.sra_id,
             organism_group=input.organism_group,
-            genome_index_path=genome_paths.gtf_path,
+            genome_index_path=genome_paths.index_path,
             trimed_transcriptome_path=input.output_path,
             aligned_transcriptome_path=aligner_paths.output,
         )
