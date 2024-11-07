@@ -41,6 +41,7 @@ from domain.usecases.transcriptome.input.trimming_transcriptome_usecase_input im
     TrimmingTypeEnum,
 )
 from infrastructure.celery import app
+from infrastructure.logger.logger import log_processing_queue_error_message
 from ports.infrastructure.messaging.task_port import TaskPort
 
 
@@ -60,7 +61,7 @@ class Task(TaskPort):
             )
             transcriptome_download_usecase.execute(input)
         except Exception as e:
-            self._log_error_message(sra_id, "download", e)
+            log_processing_queue_error_message(sra_id, "download", e)
             raise self.retry(exc=e)
 
     @app.task(bind=True, queue="genbank_ncbi_download", max_retries=3)
@@ -72,7 +73,7 @@ class Task(TaskPort):
             )
             genome_download_usecase.execute(input)
         except Exception as e:
-            self._log_error_message(genome_id, "download genome", e)
+            log_processing_queue_error_message(genome_id, "download genome", e)
             raise self.retry(exc=e)
 
     @app.task(bind=True, queue="sra_to_fasta_conversion", max_retries=3)
@@ -81,7 +82,7 @@ class Task(TaskPort):
             conversion_usecase = ConversionSraToFastaUseCaseFactory.create()
             conversion_usecase.execute(sra_id, pipeline_id, organism_group)
         except Exception as e:
-            self._log_error_message(sra_id, "download genome", e)
+            log_processing_queue_error_message(sra_id, "download genome", e)
             raise self.retry(exc=e)
 
     @app.task(bind=True, queue="trimming_transcriptome", max_retries=3)
@@ -106,7 +107,7 @@ class Task(TaskPort):
             trimming_usecase = TranscriptomeTrimmingUseCaseFactory.create()
             trimming_usecase.execute(input)
         except Exception as e:
-            self._log_error_message(sra_id, "trimming", e)
+            log_processing_queue_error_message(sra_id, "trimming", e)
             raise self.retry(exc=e)
 
     @app.task(bind=True, queue="generate_index_genome", max_retries=3)
@@ -131,7 +132,7 @@ class Task(TaskPort):
 
             genome_index_generate_usecase.execute(input)
         except Exception as e:
-            self._log_error_message(genome_id, "downloading genome", e)
+            log_processing_queue_error_message(genome_id, "downloading genome", e)
             raise self.retry(exc=e)
 
     @app.task(bind=True, queue="aligner_transcriptome", max_retries=3)
@@ -158,7 +159,7 @@ class Task(TaskPort):
             genome_aligner_usecase = GenomeAlignerUseCaseFactory.create()
             genome_aligner_usecase.execute(input)
         except Exception as e:
-            self._log_error_message(sra_id, "align transcriptome", e)
+            log_processing_queue_error_message(sra_id, "align transcriptome", e)
             raise self.retry(exc=e)
 
     @app.task(bind=True, queue="counter_transcriptome", max_retries=3)
@@ -184,8 +185,5 @@ class Task(TaskPort):
             transcriptome_count_usecase = TranscriptomeCountingUseCaseFactory.create()
             transcriptome_count_usecase.execute(input)
         except Exception as e:
-            self._log_error_message(sra_id, "count transcriptome", e)
+            log_processing_queue_error_message(sra_id, "count transcriptome", e)
             raise self.retry(exc=e)
-
-    def _log_error_message(self, sra_id: str, pipeline_stage: str, error: Exception):
-        return f"re-enqueue {sra_id} to {pipeline_stage} queue, because ocurred an error: {error}"
