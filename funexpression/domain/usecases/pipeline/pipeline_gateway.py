@@ -9,7 +9,7 @@ from ports.infrastructure.repositories.pipeline_repository_port import (
 )
 
 
-class  PipelineGateway:
+class PipelineGateway:
 
     def __init__(
         self, pipeline_repository: PipelineRepositoryPort, pipeline_task: PipelineTask
@@ -90,7 +90,7 @@ class  PipelineGateway:
             and pipeline.experiment_organism.srr_3.status == status
         )
 
-    def _is_ready_to_download(self, pipeline:Pipeline):
+    def _is_ready_to_download(self, pipeline: Pipeline):
         sra_files_pending = self._is_completed_sra_files_by_status(
             pipeline, SRAFileStatusEnum.PENDING
         )

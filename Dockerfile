@@ -186,3 +186,14 @@ WORKDIR /funexpression
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=generate_index_genome", "--concurrency=3"]
+
+FROM python:3.11-slim-buster as differ_worker
+
+ENV VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:/app:$PATH"
+
+WORKDIR /funexpression
+
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+
+ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=generate_diferential_expression", "--concurrency=3"]

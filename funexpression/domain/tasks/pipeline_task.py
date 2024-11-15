@@ -31,13 +31,13 @@ class PipelineTask:
     def download_genome_and_transcriptome(self, pipeline: Pipeline):
         self.genome_download_task.download_genome(pipeline)
         self.transcriptome_download_task.download_transcriptomes(pipeline)
-        
+
         return
-    
+
     def convert_transcripomes(self, pipeline: Pipeline):
         self.transcriptome_convert_task.convert_transcriptomes(pipeline=pipeline)
         return
-    
+
     def trimming_transcriptomes(self, pipeline: Pipeline):
         self.transcriptome_trim_task.trimming_transcriptomes(pipeline)
         return
