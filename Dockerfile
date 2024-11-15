@@ -187,21 +187,13 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=generate_index_genome", "--concurrency=3"]
 
-# -------------------------------------------------------------------------
-# Usar a imagem do Bioconductor com DESeq2 já instalado
-FROM bioconductor/bioconductor_docker:latest as diffed_worker
-
-# Instalar pacotes adicionais, se necessário
-RUN R -e "install.packages(c('pheatmap', 'ggplot2', 'dplyr'))"
+FROM python:3.11-slim-buster as differ_worker
 
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:/app:$PATH"
-# Definir o diretório de trabalho
+
 WORKDIR /funexpression
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=diff_worker", "--concurrency=3"]
-
-# Comando padrão para abrir o R
-# CMD ["R"]
+ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=generate_diferential_expression", "--concurrency=3"]

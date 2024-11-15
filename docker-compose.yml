@@ -133,7 +133,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: diffed_worker
+      target: differ_worker
     depends_on:
       - web
     volumes:
