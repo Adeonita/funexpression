@@ -20,7 +20,7 @@ class StoragePathsAdapter(StoragePathsPort):
     def get_converting_paths(self, pipeline_id, organism_group, sra_id):
         return Paths(
             input=f"pipelines/{pipeline_id}/DOWNLOADED/{organism_group}/{sra_id}.sra",
-            #output=f"pipelines/{pipeline_id}/CONVERTED/{organism_group}/{sra_id}.fastq",
+            # output=f"pipelines/{pipeline_id}/CONVERTED/{organism_group}/{sra_id}.fastq",
             output=f"pipelines/{pipeline_id}/CONVERTED/{organism_group}/{sra_id}",
         )
 
@@ -42,6 +42,25 @@ class StoragePathsAdapter(StoragePathsPort):
             input=f"./pipelines/{pipeline_id}/ALIGNED/{organism_group}/{sra_id}_Aligned.sortedByCoord.out.bam",
             output=f"./pipelines/{pipeline_id}/COUNTED/{organism_group}/{sra_id}.txt",
         )
+
+    def get_to_diffing_path(self, sra_files: dict, pipeline_id: str):
+
+        event = {}
+
+        for identifier, group in sra_files:
+            if group not in event:
+                event[group] = {}
+
+            key = identifier
+            value = self.get_counting_path(
+                pipeline_id=pipeline_id,
+                organism_group=group.upper(),
+                sra_id=key,
+            ).output
+
+            event[group][key] = value
+
+        return event
 
     def _create_outdir_if_not_exist(
         self, pipeline_id: str, step: str, group: str, acession_number=None
