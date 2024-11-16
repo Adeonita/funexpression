@@ -130,7 +130,7 @@ def diffed_transcriptome_task(pipeline_id, sra_files):
     print("Sending to the diffed transcriptome queue...")
 
     app.send_task(
-        "infrastructure.messaging.task.diffed_transcriptome",
+        "infrastructure.messaging.task.generate_diferential_expression",
         args=(pipeline_id, sra_files),
         queue="generate_diferential_expression",
     )
