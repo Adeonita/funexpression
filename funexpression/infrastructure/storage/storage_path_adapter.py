@@ -46,21 +46,34 @@ class StoragePathsAdapter(StoragePathsPort):
     def get_to_diffing_path(self, sra_files: dict, pipeline_id: str):
 
         event = {}
+        index_counters = {}
 
         for identifier, group in sra_files:
             if group not in event:
                 event[group] = {}
+                index_counters[group] = 0
 
-            key = identifier
+            index_counters[group] += 1
+            key = f"srr_{index_counters[group]}"
+
             value = self.get_counting_path(
                 pipeline_id=pipeline_id,
                 organism_group=group.upper(),
-                sra_id=key,
+                sra_id=identifier,
             ).output
 
             event[group][key] = value
 
         return event
+
+    def get_diffed_file_paths(self, pipeline_id: str):
+        return {
+            "tsv_file": f"./pipelines/{pipeline_id}/DIFFED/diferential_expression_{pipeline_id}.tsv",
+            "csv_file": f"./pipelines/{pipeline_id}/DIFFED/diferential_expression_{pipeline_id}.csv",
+            "csv_to_graph": f"./pipelines/{pipeline_id}/DIFFED/diferential_expression_{pipeline_id}.csv",
+            "vulcano_graph": f"./pipelines/{pipeline_id}/DIFFED/diferential_expression_{pipeline_id}.png",
+            "heatmap_graph": f"./pipelines/{pipeline_id}/DIFFED/diferential_expression_{pipeline_id}.png",
+        }
 
     def _create_outdir_if_not_exist(
         self, pipeline_id: str, step: str, group: str, acession_number=None
@@ -103,8 +116,9 @@ class StoragePathsAdapter(StoragePathsPort):
 
         stage_combinations = []
         for stage in stages:
-            for group in groups:
-                stage_combinations.append((stage, group))
+            if stage != PipelineStageEnum.DIFFED.value:
+                for group in groups:
+                    stage_combinations.append((stage, group))
 
         return stage_combinations
 
