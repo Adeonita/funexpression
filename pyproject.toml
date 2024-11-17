@@ -15,6 +15,7 @@ pysondb = "^1.6.7"
 pymongo = "^4.10.1"
 htseq = "^2.0.9"
 pydeseq2 = "^0.4.12"
+seaborn = "^0.13.2"
 
 
 [build-system]
