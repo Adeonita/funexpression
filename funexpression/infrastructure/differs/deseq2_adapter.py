@@ -5,10 +5,14 @@ from pydeseq2.ds import DeseqStats
 from pydeseq2.dds import DeseqDataSet
 from pydeseq2.default_inference import DefaultInference
 
+from infrastructure.reports.report import Report
 from ports.infrastructure.differ.differ_port import DifferPort
 
 
 class DESeq2Adapter(DifferPort):
+    def __init__(self, report: Report):
+        self.report = report
+
     def differ(self, pipeline_id: str, sra_files: dict, diffed_output_paths: dict):
         file_path_tri_control_1 = sra_files["control"]["srr_1"]
         file_path_tri_control_2 = sra_files["control"]["srr_2"]
@@ -54,29 +58,28 @@ class DESeq2Adapter(DifferPort):
 
         classificated_df = self._add_significance_to_dataframe(results_df)
 
-        self._save_file(
+        heatmap_dataframe = self._build_heatmap_dataframe(classificated_df)
+
+        self.report.save_file(
             extenstion="csv",
             results_df=classificated_df,
             diffed_output_path=diffed_output_paths.get("csv_file"),
         )
-        # results_df_t = self._generate_deseq_from_counted_df(counts_df, metadata)
+
+        self.report.save_file(
+            extenstion="csv",
+            results_df=heatmap_dataframe,
+            diffed_output_path=diffed_output_paths.get("heatmap_csv_to_graph"),
+        )
+
+        self.report.save_volcano(
+            classificated_df, diffed_output_paths.get("vulcano_graph")
+        )
 
     def _parse_counted_txt_to_dataframe(self, file_path: str):
         df = pd.read_csv(file_path, sep="\t", header=None)
 
         return df.rename(columns={0: "gene_id", 1: "value"})
-
-    def _save_file(self, extenstion, results_df, diffed_output_path):
-        print("writing into file...")
-
-        if extenstion == "csv":
-            ouput_path_csv = diffed_output_path
-            print("output path", ouput_path_csv)
-            print("diffed_output_path", diffed_output_path)
-
-            results_df.to_csv(ouput_path_csv, sep="\t")
-
-        print(f"writing done, the file can be finded in {ouput_path_csv}")
 
     def _build_metadata_conditions(self):
         return pd.DataFrame(
@@ -154,8 +157,6 @@ class DESeq2Adapter(DifferPort):
             stat_res.results_df
         )  # para pegar o resultado preciso do summary sim, sem ele gera o erro "'DeseqStats' object has no attribute 'results_df'"
 
-        # stat_res.results_df.to_csv(os.path.join(OUTPUT_PATH, "results.csv")) #gera um csv e escreve os resultados neste arquivo
-
         results_df["gene_id"] = results_df.index
 
         return results_df
@@ -179,3 +180,14 @@ class DESeq2Adapter(DifferPort):
         ] = "DOWN"
 
         return results_df
+
+    def _build_heatmap_dataframe(self, classificated_df: dict) -> DataFrame:
+
+        heat_map_de = pd.DataFrame()
+        heat_map_de["significance"] = classificated_df["significance"]
+        heat_map_de["log2FoldChange"] = classificated_df["log2FoldChange"]
+        heat_map_de["collor"] = "grey"
+        heat_map_de.loc[(classificated_df["significance"] == "UP"), "collor"] = "blue"
+        heat_map_de.loc[(classificated_df["significance"] == "DOWN"), "collor"] = "red"
+
+        return heat_map_de.sort_values("log2FoldChange")
