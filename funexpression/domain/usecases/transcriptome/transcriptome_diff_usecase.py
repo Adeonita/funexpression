@@ -1,13 +1,10 @@
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from domain.entities.triplicate import SRAFileStatusEnum
-from domain.usecases.transcriptome.input.counting_transcriptome_usecase import (
-    TranscriptomeCountUseCaseInput,
-)
+
 from domain.usecases.transcriptome.input.differ_transcriptome_usecase_input import (
     TranscriptomeDifferUseCaseInput,
 )
-from infrastructure.celery import diffed_transcriptome_task
-from ports.infrastructure.counter.counter_port import CounterPort
+from infrastructure.reports.email_sender import EmailSender
 from ports.infrastructure.differ.differ_port import DifferPort
 from ports.infrastructure.repositories.pipeline_repository_port import (
     PipelineRepositoryPort,
@@ -19,10 +16,12 @@ class TranscriptomeDiffUseCase:
     def __init__(
         self,
         diff: DifferPort,
+        email_sender: EmailSender,
         storage_paths: StoragePathsPort,
         pipeline_repository: PipelineRepositoryPort,
     ):
         self.diff_port = diff
+        self.email_sender = email_sender
         self.storage_paths = storage_paths
         self.pipeline_repository = pipeline_repository
 
@@ -37,8 +36,8 @@ class TranscriptomeDiffUseCase:
 
         sra_files = self.pipeline_repository.get_sra_files(input.pipeline_id)
 
-        for sra_id in sra_files:
-
+        for sra in sra_files:
+            sra_id = sra[0]
             self.pipeline_repository.update_sra_file_status(
                 pipeline_id=input.pipeline_id,
                 sra_id=sra_id,
@@ -53,6 +52,8 @@ class TranscriptomeDiffUseCase:
 
             print("Diffed step done!")
 
-            # TODO: Trigger task to send email
+        user_data = self.pipeline_repository.get_user_data(input.pipeline_id)
+
+        self.email_sender.send_email_with_results(user_data, diffed_output)
 
         return
