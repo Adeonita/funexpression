@@ -190,10 +190,10 @@ ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "in
 FROM python:3.11-slim-buster as differ_worker
 
 ENV VIRTUAL_ENV=/app/.venv \
-    PATH="/app/.venv/bin:/app:$PATH"
-
-WORKDIR /funexpression
+    PATH="/app/.venv/bin:/app:${PATH}"
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+
+WORKDIR /funexpression
 
 ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=generate_diferential_expression", "--concurrency=3"]

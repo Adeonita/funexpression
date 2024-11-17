@@ -143,6 +143,8 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
+    env_file:
+      .env
   generate_index_genome_worker:
     platform: linux/amd64
     container_name: generate_index_genome_worker
