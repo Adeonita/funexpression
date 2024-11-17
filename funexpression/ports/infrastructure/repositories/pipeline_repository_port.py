@@ -78,3 +78,6 @@ class PipelineRepositoryPort(Protocol):
 
     def get_genome_id_by_pipeline(self, pipeline_id: str) -> str:
         pass
+
+    def get_user_data(pipeline_id) -> dict:
+        pass

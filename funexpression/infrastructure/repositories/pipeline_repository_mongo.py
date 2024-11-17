@@ -309,3 +309,11 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
         pipeline = self.get(pipeline_id)
 
         return pipeline.reference_genome.acession_number
+
+    def get_user_data(self, pipeline_id) -> dict:
+        pipeline = self.get(pipeline_id)
+
+        return {
+            "user_name": "NAME_PLACEHOLDER",  # Adicionar este dado na requisição
+            "user_email": pipeline.email,
+        }
