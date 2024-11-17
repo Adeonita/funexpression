@@ -68,11 +68,12 @@ class StoragePathsAdapter(StoragePathsPort):
 
     def get_diffed_file_paths(self, pipeline_id: str):
         return {
-            "tsv_file": f"./pipelines/{pipeline_id}/DIFFED/diferential_expression_{pipeline_id}.tsv",
-            "csv_file": f"./pipelines/{pipeline_id}/DIFFED/diferential_expression_{pipeline_id}.csv",
-            "csv_to_graph": f"./pipelines/{pipeline_id}/DIFFED/diferential_expression_{pipeline_id}.csv",
-            "vulcano_graph": f"./pipelines/{pipeline_id}/DIFFED/diferential_expression_{pipeline_id}.png",
-            "heatmap_graph": f"./pipelines/{pipeline_id}/DIFFED/diferential_expression_{pipeline_id}.png",
+            "tsv_file": f"/funexpression/pipelines/{pipeline_id}/DIFFED/sheet_{pipeline_id}.tsv",
+            "csv_to_graph": f"/funexpression/pipelines/{pipeline_id}/DIFFED/sheet_to_graph_{pipeline_id}.csv",
+            "heatmap_graph": f"/funexpression/pipelines/{pipeline_id}/DIFFED/heatmap_{pipeline_id}.png",
+            "csv_file": f"/funexpression/pipelines/{pipeline_id}/DIFFED/sheet_{pipeline_id}.csv",
+            "vulcano_graph": f"/funexpression/pipelines/{pipeline_id}/DIFFED/vulcano_{pipeline_id}.jpeg",
+            "heatmap_csv_to_graph": f"/funexpression/pipelines/{pipeline_id}/DIFFED/heatmap_to_graph_{pipeline_id}.csv",
         }
 
     def _create_outdir_if_not_exist(
@@ -116,9 +117,8 @@ class StoragePathsAdapter(StoragePathsPort):
 
         stage_combinations = []
         for stage in stages:
-            if stage != PipelineStageEnum.DIFFED.value:
-                for group in groups:
-                    stage_combinations.append((stage, group))
+            for group in groups:
+                stage_combinations.append((stage, group))
 
         return stage_combinations
 
