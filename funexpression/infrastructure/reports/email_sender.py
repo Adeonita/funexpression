@@ -43,11 +43,21 @@ class EmailSender:
             )
             msg.attach(part)
 
+        # TODO: Adicionar srr dos arquivos de controle, experimento e o genoma de referência no e-mail
+        # Padj e Log2FC , RunId
+
         body = f"""{body}
         Você solicitou uma análise de expressão diferencial de genes, segue em anexo seus resultados.
+        Arquivos de entrada:
+            Controle: 
+            Experimento:
+            Genoma:
+        Parâmetros:
+            Threshold Padj:
+            Threshold Log2FC:
         Anexos:
-            1. Gráfico volcano com os genes diferencialmente expressos classificados por regulação
-            2. Planilha com Resultados Detalhados de Expressão Diferencial
+            1. Gráfico volcano com os genes diferencialmente expressos classificados como UP/DOWN regulated
+            2. Planilha com resultados detalhados de expressão diferencial de genes
 
 
         Esperamos que esta análise tenha sido divertida para você!
