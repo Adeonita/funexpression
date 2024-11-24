@@ -19,22 +19,26 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
 
     def create(
         self,
+        name: str,
         email: str,
         run_id: str,
         stage: PipelineStageEnum,
         control_organism: Triplicate,
         experiment_organism: Triplicate,
         reference_genome: Genome,
-        de_metadata_stage: DEMetadataStageEnum,
+        p_adj: float,
+        log_2_fold_change_treshold: float,
     ) -> Pipeline:
         pipeline = Pipeline(
+            name=name,
             email=email,
             run_id=run_id,
             stage=stage,
             control_organism=control_organism,
             experiment_organism=experiment_organism,
             reference_genome=reference_genome,
-            de_metadata_stage=de_metadata_stage,
+            p_adj=p_adj,
+            log_2_fold_change_treshold=log_2_fold_change_treshold,
         )
 
         pipeline_id = self.database.create("pipelines", pipeline.to_json())

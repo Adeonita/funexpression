@@ -28,8 +28,11 @@ def expression_calculate(request: ExpressionCalculateRequest):
     pipeline_create_usecase = PipelineCreateUseCaseFactory.create()
 
     pipeline_c_input = PipelineCreateUseCaseInput(
+        name=request.name,
         email=request.email,
         run_id=run_id,
+        p_adj=request.p_adj,
+        log_2_fold_change_treshold=request.log_2_fold_change_treshold,
         experiment_organism=PipelineTriplicate(
             srr_acession_number_1=request.experiment_organism.srr_acession_number_1,
             srr_acession_number_2=request.experiment_organism.srr_acession_number_2,

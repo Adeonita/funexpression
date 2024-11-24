@@ -14,7 +14,9 @@ class Pipeline:
     control_organism: Triplicate
     experiment_organism: Triplicate
     reference_genome: Genome
-    de_metadata_stage: DEMetadataStageEnum
+    name: str
+    p_adj: float
+    log_2_fold_change_treshold: float
     id: Optional[int] = None
 
     def to_json(self):
@@ -60,7 +62,10 @@ class Pipeline:
                     "index": self.reference_genome.genome_files.index.value,
                 },
             },
-            "de_metadata_stage": self.de_metadata_stage.value,
+            "name": self.name,
+            "p_adj": self.p_adj,
+            "log_2_fold_change_treshold": self.log_2_fold_change_treshold,
+            # "de_metadata_stage": self.de_metadata_stage.value,
         }
 
     @staticmethod
@@ -137,5 +142,8 @@ class Pipeline:
                     ],
                 ),
             ),
-            de_metadata_stage=DEMetadataStageEnum[json["de_metadata_stage"]],
+            name=json["name"],
+            p_adj=json["p_adj"],
+            log_2_fold_change_treshold=json["log_2_fold_change_treshold"],
+            # de_metadata_stage=DEMetadataStageEnum[json["de_metadata_stage"]],
         )

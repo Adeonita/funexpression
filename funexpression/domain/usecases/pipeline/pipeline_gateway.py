@@ -196,9 +196,7 @@ class PipelineGateway:
             pipeline, SRAFileStatusEnum.COUNTED
         )
 
-        de_metadata_file = pipeline.de_metadata_stage == DEMetadataStageEnum.GENERATED
-
-        files_already_done_to_diff = sra_files_counted and de_metadata_file
+        files_already_done_to_diff = sra_files_counted
 
         if files_already_done_to_diff and pipeline.stage == PipelineStageEnum.COUNTED:
             return True

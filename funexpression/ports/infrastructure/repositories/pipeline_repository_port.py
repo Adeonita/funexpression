@@ -11,13 +11,15 @@ class PipelineRepositoryPort(Protocol):
 
     def create(
         self,
+        name: str,
         email: str,
         run_id: str,
         stage: PipelineStageEnum,
         control_organism: Triplicate,
         experiment_organism: Triplicate,
         reference_genome_acession_number: Genome,
-        de_metadata_stage: DEMetadataStageEnum,
+        p_adj: float,
+        log_2_fold_change_treshold: float,
     ) -> Pipeline:
         pass
 
