@@ -70,8 +70,14 @@ class PipelineRepositoryPort(Protocol):
     def is_all_sra_files_counted(self, pipeline_id: str) -> bool:
         pass
 
+    def is_all_sra_files_diffed(self, pipeline_id: str) -> bool:
+        pass
+
     def get_sra_files(self, pipeline_id: str) -> dict:
         pass
 
     def get_genome_id_by_pipeline(self, pipeline_id: str) -> str:
+        pass
+
+    def get_user_data(pipeline_id) -> dict:
         pass

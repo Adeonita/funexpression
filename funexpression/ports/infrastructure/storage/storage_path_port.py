@@ -36,7 +36,7 @@ class StoragePathsPort(Protocol):
     ) -> Paths:
         pass
 
-    def get_to_diffing_path(self, sra_files: dict, pipeline_id: str):
+    def get_to_diffing_path(self, sra_files: dict, pipeline_id: str) -> dict:
         pass
 
     def _create_outdir_if_not_exist(
@@ -45,4 +45,7 @@ class StoragePathsPort(Protocol):
         pass
 
     def create_pipeline_directory_structure(pipeline_id: str):
+        pass
+
+    def get_diffed_file_paths(self):
         pass

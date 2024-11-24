@@ -9,6 +9,7 @@ class SRAFileStatusEnum(StrEnum):
     TRIMMED = "TRIMMED"
     ALIGNED = "ALIGNED"
     COUNTED = "COUNTED"
+    DIFFED = "DIFFED"
 
 
 class OrganinsGroupEnum(StrEnum):

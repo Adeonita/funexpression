@@ -22,7 +22,9 @@ class ConversionSraToFastaUseCase:
 
     def execute(self, sra_id, pipeline_id, organism_group):
 
-        paths = self.storage_paths.get_converting_paths(pipeline_id=pipeline_id, organism_group=organism_group, sra_id=sra_id)
+        paths = self.storage_paths.get_converting_paths(
+            pipeline_id=pipeline_id, organism_group=organism_group, sra_id=sra_id
+        )
         output_dir = paths.output
 
         if output_dir is not None:

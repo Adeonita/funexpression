@@ -12,6 +12,9 @@ from domain.factories.transcriptome.conversion_sra_to_fasta_usecase_factory impo
 from domain.factories.transcriptome.transcriptome_counting_usecase_factory import (
     TranscriptomeCountingUseCaseFactory,
 )
+from domain.factories.transcriptome.transcriptome_diffing_use_case_factory import (
+    DifferTranscriptomeUseCaseFactory,
+)
 from domain.factories.transcriptome.transcriptome_download_usecase_factory import (
     TranscriptomeDownloadUseCaseFactory,
 )
@@ -32,6 +35,9 @@ from domain.usecases.transcriptome.input.conversion_sra_to_fasta_usecase_input i
 )
 from domain.usecases.transcriptome.input.counting_transcriptome_usecase import (
     TranscriptomeCountUseCaseInput,
+)
+from domain.usecases.transcriptome.input.differ_transcriptome_usecase_input import (
+    TranscriptomeDifferUseCaseInput,
 )
 from domain.usecases.transcriptome.input.transcriptome_download_usecase_input import (
     TranscriptomeDownloadUseCaseInput,
@@ -187,3 +193,18 @@ class Task(TaskPort):
         except Exception as e:
             log_processing_queue_error_message(sra_id, "count transcriptome", e)
             raise self.retry(exc=e)
+
+    @app.task(bind=True, queue="generate_diferential_expression", max_retries=3)
+    def generate_diferential_expression(self, pipeline_id, sra_files):
+        try:
+            input = TranscriptomeDifferUseCaseInput(
+                pipeline_id=pipeline_id,
+                sra_files=sra_files,
+            )
+
+            transcriptome_differ_usecase = DifferTranscriptomeUseCaseFactory.create()
+            transcriptome_differ_usecase.execute(input)
+        except Exception as e:
+            log_processing_queue_error_message(pipeline_id, "differ transcriptome", e)
+            raise self.retry(exc=e)
+        pass

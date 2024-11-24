@@ -46,21 +46,35 @@ class StoragePathsAdapter(StoragePathsPort):
     def get_to_diffing_path(self, sra_files: dict, pipeline_id: str):
 
         event = {}
+        index_counters = {}
 
         for identifier, group in sra_files:
             if group not in event:
                 event[group] = {}
+                index_counters[group] = 0
 
-            key = identifier
+            index_counters[group] += 1
+            key = f"srr_{index_counters[group]}"
+
             value = self.get_counting_path(
                 pipeline_id=pipeline_id,
                 organism_group=group.upper(),
-                sra_id=key,
+                sra_id=identifier,
             ).output
 
             event[group][key] = value
 
         return event
+
+    def get_diffed_file_paths(self, pipeline_id: str):
+        return {
+            "tsv_file": f"/funexpression/pipelines/{pipeline_id}/DIFFED/sheet_{pipeline_id}.tsv",
+            "csv_to_graph": f"/funexpression/pipelines/{pipeline_id}/DIFFED/sheet_to_graph_{pipeline_id}.csv",
+            "heatmap_graph": f"/funexpression/pipelines/{pipeline_id}/DIFFED/heatmap_{pipeline_id}.png",
+            "csv_file": f"/funexpression/pipelines/{pipeline_id}/DIFFED/sheet_{pipeline_id}.csv",
+            "vulcano_graph": f"/funexpression/pipelines/{pipeline_id}/DIFFED/vulcano_{pipeline_id}.jpeg",
+            "heatmap_csv_to_graph": f"/funexpression/pipelines/{pipeline_id}/DIFFED/heatmap_to_graph_{pipeline_id}.csv",
+        }
 
     def _create_outdir_if_not_exist(
         self, pipeline_id: str, step: str, group: str, acession_number=None

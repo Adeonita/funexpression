@@ -29,7 +29,7 @@ class TranscriptomeDownloadUseCase(BaseUseCase):
         print(f"Processing download for {sra_id}")
 
         sra_path = self.geo_adapter.get_sra_sequence_from_ncbi(input.sra_id)
-        # sra_path = f"temp_files/{input.sra_id}.sra"
+
         self.pipeline_repository.update_sra_file_status(
             pipeline_id=input.pipeline_id,
             sra_id=input.sra_id,

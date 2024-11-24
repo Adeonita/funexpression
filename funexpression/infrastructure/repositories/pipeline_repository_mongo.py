@@ -282,6 +282,13 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
 
         return True if result else False
 
+    def is_all_sra_files_diffed(self, pipeline_id: str) -> bool:
+        result = self._get_pipeline_by_sra_state(
+            pipeline_id, SRAFileStatusEnum.DIFFED.value
+        )
+
+        return True if result else False
+
     def get_sra_files(self, pipeline_id: str) -> List[str]:
         pipeline = self.get(pipeline_id)
 
@@ -302,3 +309,11 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
         pipeline = self.get(pipeline_id)
 
         return pipeline.reference_genome.acession_number
+
+    def get_user_data(self, pipeline_id) -> dict:
+        pipeline = self.get(pipeline_id)
+
+        return {
+            "user_name": "NAME_PLACEHOLDER",  # Adicionar este dado na requisição
+            "user_email": pipeline.email,
+        }
