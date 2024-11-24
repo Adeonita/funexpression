@@ -103,6 +103,19 @@ class DESeq2Adapter(DifferPort):
             ],
         )
 
+    def _remove_counted_metadata(self, dataframe):
+        excluded_rows = [
+            "__no_feature",
+            "__ambiguous",
+            "__too_low_aQual",
+            "__not_aligned",
+            "__alignment_not_unique",
+        ]
+
+        return dataframe[~dataframe["gene_id"].isin(excluded_rows)]
+
+    # Retornar com os genes não expressos para o usuário de acordo com o filtro
+    # tirar a coluna gene id, manter apenas o index e renomeá-lo para locus_tag
     def _build_counted_df(
         self,
         dataframe_control_1,
@@ -113,12 +126,10 @@ class DESeq2Adapter(DifferPort):
         dataframe_experiment_3,
         with_gene_id=False,
     ):
-        # Manipulação necessária para remover as linhas informativas retornadas pelo arquivo contado
-        # Não causa erro mas gera warning
-        gene_id = dataframe_control_1[
-            dataframe_control_1["gene_id"].str.contains("PDE")
-        ]
-        gene_id = gene_id["gene_id"]
+        # Manipulação necessária para remover as linhas informativas retornadas pelo arquivo contados
+        dataframe_control_1 = self._remove_counted_metadata(dataframe_control_1)
+
+        gene_id = dataframe_control_1["gene_id"]
 
         counts_df = pd.DataFrame()
         counts_df["index"] = gene_id
@@ -161,10 +172,10 @@ class DESeq2Adapter(DifferPort):
 
         return results_df
 
-    def _add_significance_to_dataframe(self, diffed_dataframe):
-        log2_fc_threshold = 0
-        pval_threshold = 0.05
-
+    # TODO: Manter esses valores como default
+    def _add_significance_to_dataframe(
+        self, diffed_dataframe, log2_fc_threshold=0, pval_threshold=0.05
+    ):
         results_df = diffed_dataframe
 
         results_df["significance"] = "NOT_SIGNIFICANT"
