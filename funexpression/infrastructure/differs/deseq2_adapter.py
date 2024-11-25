@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from pandas import DataFrame
 
@@ -12,8 +13,17 @@ from ports.infrastructure.differ.differ_port import DifferPort
 class DESeq2Adapter(DifferPort):
     def __init__(self, report: Report):
         self.report = report
+        self.default_padj = os.getenv("P_ADJ")
+        self.default_log2_fc_threshold = os.getenv("LOG2FC_THRESHOLD")
 
-    def differ(self, pipeline_id: str, sra_files: dict, diffed_output_paths: dict):
+    def differ(
+        self,
+        pipeline_id: str,
+        sra_files: dict,
+        diffed_output_paths: dict,
+        p_adj: float,
+        log2_fc_threshold: float,
+    ):
         file_path_tri_control_1 = sra_files["control"]["srr_1"]
         file_path_tri_control_2 = sra_files["control"]["srr_2"]
         file_path_tri_control_3 = sra_files["control"]["srr_3"]
@@ -56,7 +66,11 @@ class DESeq2Adapter(DifferPort):
 
         results_df = self._generate_deseq_from_counted_df(counted_df, metadata)
 
-        classificated_df = self._add_significance_to_dataframe(results_df)
+        classificated_df = self._add_significance_to_dataframe(
+            results_df,
+            p_adj,
+            log2_fc_threshold,
+        )
 
         heatmap_dataframe = self._build_heatmap_dataframe(classificated_df)
 
@@ -172,21 +186,26 @@ class DESeq2Adapter(DifferPort):
 
         return results_df
 
-    # TODO: Manter esses valores como default
     def _add_significance_to_dataframe(
-        self, diffed_dataframe, log2_fc_threshold=0, pval_threshold=0.05
+        self, diffed_dataframe, p_adj, log2_fc_threshold
     ):
+        if p_adj is None:
+            p_adj = self.default_padj
+
+        if log2_fc_threshold is None:
+            log2_fc_threshold = self.default_log2_fc_threshold
+
         results_df = diffed_dataframe
 
         results_df["significance"] = "NOT_SIGNIFICANT"
         results_df.loc[
             (results_df["log2FoldChange"] > log2_fc_threshold)
-            & (results_df["padj"] < pval_threshold),
+            & (results_df["padj"] < p_adj),
             "significance",
         ] = "UP"
         results_df.loc[
-            (results_df["log2FoldChange"] < log2_fc_threshold)
-            & (results_df["padj"] < pval_threshold),
+            (results_df["log2FoldChange"] < log2_fc_threshold * -1)
+            & (results_df["padj"] < p_adj),
             "significance",
         ] = "DOWN"
 
