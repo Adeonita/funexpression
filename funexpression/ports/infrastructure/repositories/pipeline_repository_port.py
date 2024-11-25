@@ -19,7 +19,7 @@ class PipelineRepositoryPort(Protocol):
         experiment_organism: Triplicate,
         reference_genome_acession_number: Genome,
         p_adj: float,
-        log_2_fold_change_treshold: float,
+        log_2_fold_change_threshold: float,
     ) -> Pipeline:
         pass
 
@@ -82,4 +82,13 @@ class PipelineRepositoryPort(Protocol):
         pass
 
     def get_user_data(pipeline_id) -> dict:
+        pass
+
+    def get_p_adj_by_pipeline(self, pipeline_id: str) -> float:
+        pass
+
+    def get_log_2_fold_change_threshold_by_pipeline(self, pipeline_id: str) -> float:
+        pass
+
+    def get_pipeline_info(self, pipeline_id: str) -> dict:
         pass

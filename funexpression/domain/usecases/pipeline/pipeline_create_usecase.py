@@ -52,7 +52,7 @@ class PipelineCreateUseCase(BaseUseCase):
             control_organism=control_organism,
             reference_genome=reference_genome,
             p_adj=input.p_adj,
-            log_2_fold_change_treshold=input.log_2_fold_change_treshold,
+            log_2_fold_change_threshold=input.log_2_fold_change_threshold,
         )
 
         self.storage_paths.create_pipeline_directory_structure(pipeline_id=pipeline.id)

@@ -16,7 +16,7 @@ class Pipeline:
     reference_genome: Genome
     name: str
     p_adj: float
-    log_2_fold_change_treshold: float
+    log_2_fold_change_threshold: float
     id: Optional[int] = None
 
     def to_json(self):
@@ -64,7 +64,7 @@ class Pipeline:
             },
             "name": self.name,
             "p_adj": self.p_adj,
-            "log_2_fold_change_treshold": self.log_2_fold_change_treshold,
+            "log_2_fold_change_threshold": self.log_2_fold_change_threshold,
             # "de_metadata_stage": self.de_metadata_stage.value,
         }
 
@@ -144,6 +144,6 @@ class Pipeline:
             ),
             name=json["name"],
             p_adj=json["p_adj"],
-            log_2_fold_change_treshold=json["log_2_fold_change_treshold"],
+            log_2_fold_change_threshold=json["log_2_fold_change_threshold"],
             # de_metadata_stage=DEMetadataStageEnum[json["de_metadata_stage"]],
         )
