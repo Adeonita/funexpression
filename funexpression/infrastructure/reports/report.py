@@ -5,7 +5,12 @@ import numpy as np
 
 class Report:
 
-    def save_file(self, extenstion, results_df, diffed_output_path):
+    def save_file(
+        self, extenstion, results_df, diffed_output_path, remove_gene_id=False
+    ):
+        if remove_gene_id:
+            results_df = results_df.drop(columns=["gene_id"])
+
         print("writing into file...")
 
         if extenstion == "csv":
@@ -21,6 +26,7 @@ class Report:
         print(f"File done! The file can be finded in {ouput_path_csv}")
 
     def save_volcano(self, classificated_df, output_volcano_path):
+        # Add filter to remove not significant genes
 
         volcano_df = classificated_df
 
