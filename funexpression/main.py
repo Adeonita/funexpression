@@ -1,6 +1,5 @@
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 
 from application.helpers.helper import get_user_name_by_email
@@ -19,15 +18,6 @@ import uuid
 load_dotenv("../.env")
 
 app = FastAPI()
-origins = ["null"]  # NOT recommended - see details below
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 router = APIRouter()
 
 
