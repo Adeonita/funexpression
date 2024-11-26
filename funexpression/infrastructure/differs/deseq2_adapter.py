@@ -157,9 +157,6 @@ class DESeq2Adapter(DifferPort):
         counts_df["experiment_sample_2"] = dataframe_experiment_2["value"]
         counts_df["experiment_sample_3"] = dataframe_experiment_3["value"]
 
-        # if with_gene_id:
-        #     counts_df["gene_id"] = gene_id
-
         counts_df = counts_df.set_index("index")
 
         return counts_df.T
