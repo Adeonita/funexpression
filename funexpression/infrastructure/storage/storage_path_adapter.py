@@ -110,7 +110,6 @@ class StoragePathsAdapter(StoragePathsPort):
             PipelineStageEnum.TRIMMED.value,
             PipelineStageEnum.ALIGNED.value,
             PipelineStageEnum.COUNTED.value,
-            PipelineStageEnum.DIFFED.value,
         ]
 
         groups = [OrganinsGroupEnum.EXPERIMENT.value, OrganinsGroupEnum.CONTROL.value]
@@ -122,7 +121,19 @@ class StoragePathsAdapter(StoragePathsPort):
 
         return stage_combinations
 
+    def create_diff_directory(self, pipeline_id: str):
+        diretory = os.path.join(
+            "./pipelines/", pipeline_id, PipelineStageEnum.DIFFED.value
+        )
+
+        if not os.path.exists(diretory):
+            os.makedirs(diretory)
+
+        return None
+
     def create_pipeline_directory_structure(self, pipeline_id: str):
+        self.create_diff_directory(pipeline_id)
+
         directories = self._create_dirs()
         for directory_stage, directory_organism_group in directories:
             diretory = os.path.join(

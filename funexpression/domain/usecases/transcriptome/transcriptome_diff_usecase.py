@@ -28,10 +28,19 @@ class TranscriptomeDiffUseCase:
     def execute(self, input: TranscriptomeDifferUseCaseInput):
         diffed_output = self.storage_paths.get_diffed_file_paths(input.pipeline_id)
 
+        p_adj = self.pipeline_repository.get_p_adj_by_pipeline(input.pipeline_id)
+        log2_fc_threshold = (
+            self.pipeline_repository.get_log_2_fold_change_threshold_by_pipeline(
+                input.pipeline_id
+            )
+        )
+
         self.diff_port.differ(
             pipeline_id=input.pipeline_id,
             sra_files=input.sra_files,
             diffed_output_paths=diffed_output,
+            p_adj=p_adj,
+            log2_fc_threshold=log2_fc_threshold,
         )
 
         sra_files = self.pipeline_repository.get_sra_files(input.pipeline_id)
@@ -52,8 +61,8 @@ class TranscriptomeDiffUseCase:
 
             print("Diffed step done!")
 
-        user_data = self.pipeline_repository.get_user_data(input.pipeline_id)
+        pipeline_info = self.pipeline_repository.get_pipeline_info(input.pipeline_id)
 
-        self.email_sender.send_email_with_results(user_data, diffed_output)
+        self.email_sender.send_email_with_results(pipeline_info, diffed_output)
 
         return

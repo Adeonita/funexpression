@@ -44,21 +44,21 @@ class PipelineCreateUseCase(BaseUseCase):
         reference_genome = self._get_reference_genome(input)
 
         pipeline: Pipeline = self.pipeline_repository.create(
+            name=input.name,
             email=input.email,
             run_id=input.run_id,
             stage=PipelineStageEnum.PENDING,
             experiment_organism=experiment_organism,
             control_organism=control_organism,
             reference_genome=reference_genome,
-            de_metadata_stage=DEMetadataStageEnum.PENDING,
+            p_adj=input.p_adj,
+            log_2_fold_change_threshold=input.log_2_fold_change_threshold,
         )
 
         self.storage_paths.create_pipeline_directory_structure(pipeline_id=pipeline.id)
 
-
         self.pipeline_gateway.start(pipeline)
         return pipeline
-
 
     def _get_reference_genome(self, input: PipelineCreateUseCaseInput) -> Genome:
         return Genome(
@@ -102,8 +102,6 @@ class PipelineCreateUseCase(BaseUseCase):
                 status=SRAFileStatusEnum.PENDING,
             ),
         )
-
- 
 
     def _find_pipeline(self, input: PipelineCreateUseCaseInput):
         pipelines = self.pipeline_repository.find_pipeline(

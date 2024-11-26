@@ -11,13 +11,15 @@ class PipelineRepositoryPort(Protocol):
 
     def create(
         self,
+        name: str,
         email: str,
         run_id: str,
         stage: PipelineStageEnum,
         control_organism: Triplicate,
         experiment_organism: Triplicate,
         reference_genome_acession_number: Genome,
-        de_metadata_stage: DEMetadataStageEnum,
+        p_adj: float,
+        log_2_fold_change_threshold: float,
     ) -> Pipeline:
         pass
 
@@ -80,4 +82,13 @@ class PipelineRepositoryPort(Protocol):
         pass
 
     def get_user_data(pipeline_id) -> dict:
+        pass
+
+    def get_p_adj_by_pipeline(self, pipeline_id: str) -> float:
+        pass
+
+    def get_log_2_fold_change_threshold_by_pipeline(self, pipeline_id: str) -> float:
+        pass
+
+    def get_pipeline_info(self, pipeline_id: str) -> dict:
         pass
