@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI
 
+
 from application.helpers.helper import get_user_name_by_email
 from application.interfaces.expression_request_payload import ExpressionCalculateRequest
 
@@ -32,7 +33,7 @@ def expression_calculate(request: ExpressionCalculateRequest):
         email=request.email,
         run_id=run_id,
         p_adj=request.p_adj,
-        log_2_fold_change_treshold=request.log_2_fold_change_treshold,
+        log_2_fold_change_threshold=request.log_2_fold_change_threshold,
         experiment_organism=PipelineTriplicate(
             srr_acession_number_1=request.experiment_organism.srr_acession_number_1,
             srr_acession_number_2=request.experiment_organism.srr_acession_number_2,
