@@ -26,7 +26,6 @@ class Report:
         print(f"File done! The file can be finded in {ouput_path_csv}")
 
     def save_volcano(self, classificated_df, output_volcano_path):
-
         volcano_df = classificated_df
 
         volcano_df["-log10(padj)"] = -np.log10(classificated_df["padj"])
