@@ -40,7 +40,7 @@ class EmailSender:
         )
 
         reference_genome = pipeline_info.get("reference_genome")
-        padj = pipeline_info.get("p_adj")
+        padj = pipeline_info.get("padj")
         log_2_fold_change_threshold = pipeline_info.get("log_2_fold_change_threshold")
 
         msg = MIMEMultipart()

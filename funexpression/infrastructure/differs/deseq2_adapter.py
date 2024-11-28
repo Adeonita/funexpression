@@ -78,14 +78,12 @@ class DESeq2Adapter(DifferPort):
             extenstion="csv",
             results_df=classificated_df,
             diffed_output_path=diffed_output_paths.get("csv_file"),
-            remove_gene_id=True,
         )
 
         self.report.save_file(
             extenstion="csv",
             results_df=heatmap_dataframe,
             diffed_output_path=diffed_output_paths.get("heatmap_csv_to_graph"),
-            remove_gene_id=False,
         )
 
         self.report.save_volcano(
@@ -156,6 +154,9 @@ class DESeq2Adapter(DifferPort):
         counts_df["experiment_sample_1"] = dataframe_experiment_1["value"]
         counts_df["experiment_sample_2"] = dataframe_experiment_2["value"]
         counts_df["experiment_sample_3"] = dataframe_experiment_3["value"]
+
+        if with_gene_id:
+            counts_df["gene_id"] = gene_id
 
         counts_df = counts_df.set_index("index")
 
