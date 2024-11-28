@@ -26,7 +26,6 @@ class Report:
         print(f"File done! The file can be finded in {ouput_path_csv}")
 
     def save_volcano(self, classificated_df, output_volcano_path):
-        # Add filter to remove not significant genes
 
         volcano_df = classificated_df
 
