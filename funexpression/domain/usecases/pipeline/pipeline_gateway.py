@@ -57,6 +57,12 @@ class PipelineGateway:
                 "pipeline_stage": pipeline.stage.value,
             }
 
+        if self._is_done(pipeline):
+            return {
+                "message": f"Your pipeline is already done, await the result in your email.",
+                "pipeline_stage": pipeline.stage.value,
+            }
+
         raise_message = {
             "message": f"Ocurre an error when try aling your pipeline, await to more iformation.",
             "pipeline_stage": pipeline.stage.value,
@@ -95,7 +101,7 @@ class PipelineGateway:
             pipeline, SRAFileStatusEnum.PENDING
         )
 
-        if sra_files_pending:
+        if pipeline.stage == PipelineStageEnum.PENDING:
             return True
 
     def _is_ready_to_converter(self, pipeline: Pipeline):
@@ -205,6 +211,26 @@ class PipelineGateway:
             self.pipeline_repository.update_status(
                 pipeline_id=pipeline.id,
                 pipeline_stage=PipelineStageEnum.COUNTED,
+            )
+
+            return True
+
+        return False
+
+    def _is_done(self, pipeline: Pipeline):
+        sra_files_diffed = self._is_completed_sra_files_by_status(
+            pipeline, SRAFileStatusEnum.DIFFED
+        )
+
+        files_already_done = sra_files_diffed
+
+        if files_already_done and pipeline.stage == PipelineStageEnum.DIFFED:
+            return True
+
+        if files_already_done and pipeline.stage == PipelineStageEnum.COUNTED:
+            self.pipeline_repository.update_status(
+                pipeline_id=pipeline.id,
+                pipeline_stage=PipelineStageEnum.DIFFED,
             )
 
             return True
