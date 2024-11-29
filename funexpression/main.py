@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI
+from fastapi.responses import HTMLResponse
 
 
 from application.helpers.helper import get_user_name_by_email
@@ -13,12 +14,19 @@ from domain.usecases.pipeline.input.pipeline_create_input import (
     PipelineTriplicate,
 )
 
+from infrastructure.ui.home import interface
+
 import uuid
 
 load_dotenv("../.env")
 
 app = FastAPI()
 router = APIRouter()
+
+
+@router.get("/", response_class=HTMLResponse)
+def home():
+    return interface
 
 
 @router.post("/expression/calculate/")
