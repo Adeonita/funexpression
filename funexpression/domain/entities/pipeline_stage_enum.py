@@ -10,3 +10,4 @@ class PipelineStageEnum(Enum):
     COUNTED = "COUNTED"
     DIFFED = "DIFFED"
     DONE = "DONE"
+    FAILED = "FAILED"

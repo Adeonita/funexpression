@@ -35,7 +35,7 @@ class PipelineCreateUseCase(BaseUseCase):
     def execute(self, input: PipelineCreateUseCaseInput):
         created_pipeline = self._find_pipeline(input)
 
-        if created_pipeline:
+        if created_pipeline and created_pipeline["stage"] == PipelineStageEnum.FAILED:
             created_pipeline = Pipeline.from_json(created_pipeline)
             return self.pipeline_gateway.handle(created_pipeline)
 

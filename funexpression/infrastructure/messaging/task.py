@@ -1,3 +1,5 @@
+import os
+from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from domain.entities.triplicate import OrganinsGroupEnum
 from domain.factories.genome_aligner_usecase_factory import GenomeAlignerUseCaseFactory
 from domain.factories.genome_download_usecase_factory import (
@@ -48,12 +50,19 @@ from domain.usecases.transcriptome.input.trimming_transcriptome_usecase_input im
 )
 from infrastructure.celery import app
 from infrastructure.logger.logger import log_processing_queue_error_message
+from infrastructure.messaging.task_helper import set_pipeline_status_to_failed
 from ports.infrastructure.messaging.task_port import TaskPort
+
+MAX_RETRYES = int(os.getenv("TASK_MAX_RETRIES"))
 
 
 class Task(TaskPort):
 
-    @app.task(bind=True, queue="geo_sra_download", max_retries=3)
+    @app.task(
+        bind=True,
+        queue="geo_sra_download",
+        max_retries=MAX_RETRYES,
+    )
     def sra_transcriptome_download(
         self, sra_id: str, pipeline_id: str, organism_group: str
     ):
@@ -67,10 +76,13 @@ class Task(TaskPort):
             )
             transcriptome_download_usecase.execute(input)
         except Exception as e:
-            log_processing_queue_error_message(sra_id, "download", e)
-            raise self.retry(exc=e)
+            if self.request.retries >= MAX_RETRYES:
+                set_pipeline_status_to_failed(pipeline_id)
 
-    @app.task(bind=True, queue="genbank_ncbi_download", max_retries=3)
+            log_processing_queue_error_message(sra_id, "download", e)
+            self.retry(exc=e)
+
+    @app.task(bind=True, queue="genbank_ncbi_download", max_retries=MAX_RETRYES)
     def genome_download(self, genome_id: str, pipeline_id: str):
         try:
             genome_download_usecase = GenomeDownloadUseCaseFactory.create()
@@ -79,19 +91,25 @@ class Task(TaskPort):
             )
             genome_download_usecase.execute(input)
         except Exception as e:
+            if self.request.retries >= MAX_RETRYES:
+                set_pipeline_status_to_failed(pipeline_id)
+
             log_processing_queue_error_message(genome_id, "download genome", e)
             raise self.retry(exc=e)
 
-    @app.task(bind=True, queue="sra_to_fasta_conversion", max_retries=3)
+    @app.task(bind=True, queue="sra_to_fasta_conversion", max_retries=MAX_RETRYES)
     def sra_to_fasta_conversion(self, sra_id, pipeline_id, organism_group):
         try:
             conversion_usecase = ConversionSraToFastaUseCaseFactory.create()
             conversion_usecase.execute(sra_id, pipeline_id, organism_group)
         except Exception as e:
+            if self.request.retries >= MAX_RETRYES:
+                set_pipeline_status_to_failed(pipeline_id)
+
             log_processing_queue_error_message(sra_id, "download genome", e)
             raise self.retry(exc=e)
 
-    @app.task(bind=True, queue="trimming_transcriptome", max_retries=3)
+    @app.task(bind=True, queue="trimming_transcriptome", max_retries=MAX_RETRYES)
     def trimming_transcriptome(
         self,
         pipeline_id: str,
@@ -113,10 +131,13 @@ class Task(TaskPort):
             trimming_usecase = TranscriptomeTrimmingUseCaseFactory.create()
             trimming_usecase.execute(input)
         except Exception as e:
+            if self.request.retries >= MAX_RETRYES:
+                set_pipeline_status_to_failed(pipeline_id)
+
             log_processing_queue_error_message(sra_id, "trimming", e)
             raise self.retry(exc=e)
 
-    @app.task(bind=True, queue="generate_index_genome", max_retries=3)
+    @app.task(bind=True, queue="generate_index_genome", max_retries=MAX_RETRYES)
     def generate_index_genome(
         self,
         pipeline_id: str,
@@ -138,10 +159,13 @@ class Task(TaskPort):
 
             genome_index_generate_usecase.execute(input)
         except Exception as e:
+            if self.request.retries >= MAX_RETRYES:
+                set_pipeline_status_to_failed(pipeline_id)
+
             log_processing_queue_error_message(genome_id, "downloading genome", e)
             raise self.retry(exc=e)
 
-    @app.task(bind=True, queue="aligner_transcriptome", max_retries=3)
+    @app.task(bind=True, queue="aligner_transcriptome", max_retries=MAX_RETRYES)
     def aligner_transcriptome(
         self,
         pipeline_id: str,
@@ -165,10 +189,13 @@ class Task(TaskPort):
             genome_aligner_usecase = GenomeAlignerUseCaseFactory.create()
             genome_aligner_usecase.execute(input)
         except Exception as e:
+            if self.request.retries >= MAX_RETRYES:
+                set_pipeline_status_to_failed(pipeline_id)
+
             log_processing_queue_error_message(sra_id, "align transcriptome", e)
             raise self.retry(exc=e)
 
-    @app.task(bind=True, queue="counter_transcriptome", max_retries=3)
+    @app.task(bind=True, queue="counter_transcriptome", max_retries=MAX_RETRYES)
     def counter_transcriptome(
         self,
         pipeline_id: str,
@@ -191,10 +218,15 @@ class Task(TaskPort):
             transcriptome_count_usecase = TranscriptomeCountingUseCaseFactory.create()
             transcriptome_count_usecase.execute(input)
         except Exception as e:
+            if self.request.retries >= MAX_RETRYES:
+                set_pipeline_status_to_failed(pipeline_id)
+
             log_processing_queue_error_message(sra_id, "count transcriptome", e)
             raise self.retry(exc=e)
 
-    @app.task(bind=True, queue="generate_diferential_expression", max_retries=3)
+    @app.task(
+        bind=True, queue="generate_diferential_expression", max_retries=MAX_RETRYES
+    )
     def generate_diferential_expression(self, pipeline_id, sra_files):
         try:
             input = TranscriptomeDifferUseCaseInput(
@@ -205,6 +237,8 @@ class Task(TaskPort):
             transcriptome_differ_usecase = DifferTranscriptomeUseCaseFactory.create()
             transcriptome_differ_usecase.execute(input)
         except Exception as e:
+            if self.request.retries >= MAX_RETRYES:
+                set_pipeline_status_to_failed(pipeline_id)
+
             log_processing_queue_error_message(pipeline_id, "differ transcriptome", e)
             raise self.retry(exc=e)
-        pass
