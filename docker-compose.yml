@@ -47,6 +47,8 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
+    env_file:
+      .env
   conversion_worker:
     platform: linux/amd64
     container_name: conversion_worker
