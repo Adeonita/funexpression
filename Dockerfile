@@ -44,8 +44,10 @@ ENV VIRTUAL_ENV=/app/.venv \
 WORKDIR /funexpression
 
 COPY --from=builder ${SRATOOLKIT} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+ARG DOWNLOAD_WORKER_CONCURRENCY 
+ENV CONCURRENCY=$DOWNLOAD_WORKER_CONCURRENCY
 
-ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=geo_sra_download", "--concurrency=3"]
+ENTRYPOINT celery -A infrastructure.messaging.task worker -l info --pool=threads --queues=geo_sra_download --concurrency=$CONCURRENCY
 
 # the image is used to run worker for conversion sra to fasta files
 FROM python:3.11-slim-buster AS conversion_worker

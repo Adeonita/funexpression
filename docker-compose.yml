@@ -31,11 +31,15 @@ services:
       - ./configs/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
     networks:
       - backend
+    env_file:
+      .env
   download_worker:
     platform: linux/amd64
     container_name: download_worker
     build:
       context: .
+      args:
+        - DOWNLOAD_WORKER_CONCURRENCY=$DOWNLOAD_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: download_worker
     depends_on:
@@ -65,6 +69,8 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
+    env_file:
+      .env
   trimming_worker:
     platform: linux/amd64
     container_name: trimming_worker
@@ -81,6 +87,8 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
+    env_file:
+      .env
   genome_download_worker:
     platform: linux/amd64
     container_name: genome_download_worker
@@ -97,6 +105,8 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
+    env_file:
+      .env
   aligner_worker:
     platform: linux/amd64
     container_name: aligner_worker
@@ -113,6 +123,8 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
+    env_file:
+      .env
   counter_worker:
     platform: linux/amd64
     container_name: counter_worker
@@ -129,6 +141,8 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
+    env_file:
+      .env
   diffed_worker:
     platform: linux/amd64
     container_name: diffed_worker
@@ -163,16 +177,20 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
+    env_file:
+      .env
   mongo:
     image: mongo
     container_name: mongo-database
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_HOST}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     ports:
       - "27017:27017"
     networks:
       - backend
+    env_file:
+      .env
 networks:
     backend:
       driver: bridge
