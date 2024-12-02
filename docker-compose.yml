@@ -39,7 +39,7 @@ services:
     build:
       context: .
       args:
-        - DOWNLOAD_WORKER_CONCURRENCY=$DOWNLOAD_WORKER_CONCURRENCY
+        - TRANSCRIPTOME_DOWNLOAD_WORKER_CONCURRENCY=$TRANSCRIPTOME_DOWNLOAD_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: download_worker
     depends_on:
@@ -58,6 +58,8 @@ services:
     container_name: conversion_worker
     build:
       context: .
+      args:
+        - TRANSCRIPTOME_CONVERSION_WORKER_CONCURRENCY=$TRANSCRIPTOME_CONVERSION_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: conversion_worker
     depends_on:
@@ -76,6 +78,8 @@ services:
     container_name: trimming_worker
     build:
       context: .
+      args:
+        - TRANSCRIPTOME_TRIMMING_WORKER_CONCURRENCY=$TRANSCRIPTOME_TRIMMING_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: trimming_worker
     depends_on:
@@ -94,6 +98,8 @@ services:
     container_name: genome_download_worker
     build:
       context: .
+      args:
+        - GENOME_DOWNLOAD_WORKER_CONCURRENCY=$GENOME_DOWNLOAD_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: genome_download_worker
     depends_on:
@@ -112,6 +118,8 @@ services:
     container_name: aligner_worker
     build:
       context: .
+      args:
+        - TRANSCRIPTOME_ALIGNER_WORKER_CONCURRENCY=$TRANSCRIPTOME_ALIGNER_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: aligner_worker
     depends_on:
@@ -130,6 +138,8 @@ services:
     container_name: counter_worker
     build:
       context: .
+      args:
+        - TRANSCRIPTOME_COUNTER_WORKER_CONCURRENCY=$TRANSCRIPTOME_COUNTER_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: counter_worker
     depends_on:
@@ -148,6 +158,8 @@ services:
     container_name: diffed_worker
     build:
       context: .
+      args:
+        - DIFFED_WORKER_CONCURRENCY=$DIFFED_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: differ_worker
     depends_on:
@@ -166,6 +178,8 @@ services:
     container_name: generate_index_genome_worker
     build:
       context: .
+      args:
+        - GENOME_GENERATE_INDEX_WORKER_CONCURRENCY=$GENOME_GENERATE_INDEX_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: generate_index_genome_worker
     depends_on:
