@@ -13,9 +13,7 @@ class MongoAdapter:
         user = os.getenv("MONGO_USER")
         password = os.getenv("MONGO_PASSWORD")
 
-        self.client = MongoClient(
-            f"mongodb://{user}:{password}@{host}:{port}/", connect=False
-        )
+        self.client = MongoClient(f"mongodb://{user}:{password}@{host}:{port}/")
 
     def _database_connection(self, database_name="funexpression"):
         return self.client[database_name]
