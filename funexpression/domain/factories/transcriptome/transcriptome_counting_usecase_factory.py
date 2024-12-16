@@ -1,7 +1,7 @@
 from domain.usecases.transcriptome.transciptome_count_usecase import (
     TranscriptomeCountUseCase,
 )
-from infrastructure.counters.htseq_count import HTSeqCountAdapter
+from infrastructure.counters.htseq_count_adapter import HTSeqCountAdapter
 from infrastructure.repositories.pipeline_repository_mongo import (
     PipelineRepositoryMongo,
 )
