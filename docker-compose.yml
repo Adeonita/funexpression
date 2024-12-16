@@ -180,7 +180,7 @@ services:
     build:
       context: .
       args:
-        - GENOME_GENERATE_INDEX_WORKER_CONCURRENCY=$GENOME_GENERATE_INDEX_WORKER_CONCURRENCY
+        - GENOME_INDEX_GENERATOR_WORKER_CONCURRENCY=$GENOME_INDEX_GENERATOR_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: generate_index_genome_worker
     depends_on:
