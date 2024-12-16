@@ -150,7 +150,7 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 ARG TRANSCRIPTOME_ALIGNER_WORKER_CONCURRENCY
 ENV TRANSCRIPTOME_ALIGNER_WORKER_CONCURRENCY_VALUE=$TRANSCRIPTOME_ALIGNER_WORKER_CONCURRENCY
 
-ENTRYPOINT celery -A infrastructure.messaging.task worker -l info --pool=threads ----queues=aligner_transcriptome --concurrency=$TRANSCRIPTOME_ALIGNER_WORKER_CONCURRENCY_VALUE
+ENTRYPOINT celery -A infrastructure.messaging.task worker -l info --pool=threads --queues=aligner_transcriptome --concurrency=$TRANSCRIPTOME_ALIGNER_WORKER_CONCURRENCY_VALUE
 
 
 # the image is used to run worker for count transcriptomes
