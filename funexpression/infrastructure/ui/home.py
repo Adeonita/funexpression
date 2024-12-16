@@ -23,9 +23,9 @@ interface = """
       <label class="block text-sm text-[#5BCFC1] mb-2" for="reference_genome">Reference Genome Accession Number</label>
       <input class="w-full p-2 border border-[#76F191] rounded mb-4" type="text" id="reference_genome" name="reference_genome" placeholder="GCA_000346795.1" required>
 
-      <!-- Control Organism -->
+      <!-- Control Sample (triplicate) -->
       <fieldset class="mb-6">
-        <legend class="text-sm text-[#5BCFC1] mb-2">Control Organism</legend>
+        <legend class="text-sm text-[#5BCFC1] mb-2">Control Sample (triplicate)</legend>
         <div class="flex gap-4">
           <input class="w-full p-2 border border-[#76F191] rounded" type="text" id="control_srr_1" name="control_srr_1" placeholder="SRR10042980" >
           <input class="w-full p-2 border border-[#76F191] rounded" type="text" id="control_srr_2" name="control_srr_2" placeholder="SRR10042981" >
@@ -33,9 +33,9 @@ interface = """
         </div>
       </fieldset>
 
-      <!-- Experiment Organism -->
+      <!-- Experiment Sample (triplicate) -->
       <fieldset class="mb-6">
-        <legend class="text-sm text-[#5BCFC1] mb-2">Experiment Organism</legend>
+        <legend class="text-sm text-[#5BCFC1] mb-2">Experiment Sample (triplicate)</legend>
         <div class="flex gap-4">
           <input class="w-full p-2 border border-[#76F191] rounded" type="text" id="experiment_srr_1" name="experiment_srr_1" placeholder="SRR10042986" >
           <input class="w-full p-2 border border-[#76F191] rounded" type="text" id="experiment_srr_2" name="experiment_srr_2" placeholder="SRR10042987" >
@@ -44,11 +44,11 @@ interface = """
       </fieldset>
 
       <!-- p_adj -->
-      <label class="block text-sm text-[#5BCFC1] mb-2" for="p_adj">P_adj</label>
+      <label class="block text-sm text-[#5BCFC1] mb-2" for="p_adj">Padj</label>
       <input class="w-full p-2 border border-[#76F191] rounded mb-4" type="text" id="p_adj" name="p_adj" placeholder="0.05" required>
 
-      <!-- Log_2_Fold_Change_Threshold -->
-      <label class="block text-sm text-[#5BCFC1] mb-2" for="log_2_fc">Log_2_Fold_Change_Threshold</label>
+      <!-- Log2_Fold_Change_Threshold -->
+      <label class="block text-sm text-[#5BCFC1] mb-2" for="log_2_fc">Log2 Fold Change Threshold</label>
       <input class="w-full p-2 border border-[#76F191] rounded mb-6" type="text" id="log_2_fc" name="log_2_fc" step="0.01" placeholder="2" required>
 
       <!-- Submit -->
