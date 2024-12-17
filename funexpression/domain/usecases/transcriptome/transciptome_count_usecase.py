@@ -23,13 +23,12 @@ class TranscriptomeCountUseCase:
         self.pipeline_repository = pipeline_repository
 
     def execute(self, input: TranscriptomeCountUseCaseInput):
-        # TODO: descomentar ao fim do teste
-        # self.counter_port.count(
-        #     aligned_file_path=input.aligned_transcriptome_path,
-        #     gtf_genome_file_path=input.gtf_genome_file_path,
-        #     counted_file_path=input.counted_transcriptome_path,
-        #     sra_id=input.sra_id,
-        # )
+        self.counter_port.count(
+            aligned_file_path=input.aligned_transcriptome_path,
+            gtf_genome_file_path=input.gtf_genome_file_path,
+            counted_file_path=input.counted_transcriptome_path,
+            sra_id=input.sra_id,
+        )
 
         self.pipeline_repository.update_sra_file_status(
             pipeline_id=input.pipeline_id,

@@ -31,11 +31,15 @@ services:
       - ./configs/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
     networks:
       - backend
+    env_file:
+      .env
   download_worker:
     platform: linux/amd64
-    container_name: download_worker
+    container_name: transcriptome_download_worker
     build:
       context: .
+      args:
+        - TRANSCRIPTOME_DOWNLOAD_WORKER_CONCURRENCY=$TRANSCRIPTOME_DOWNLOAD_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: download_worker
     depends_on:
@@ -51,9 +55,11 @@ services:
       .env
   conversion_worker:
     platform: linux/amd64
-    container_name: conversion_worker
+    container_name: transcriptome_converter_worker
     build:
       context: .
+      args:
+        - TRANSCRIPTOME_CONVERSION_WORKER_CONCURRENCY=$TRANSCRIPTOME_CONVERSION_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: conversion_worker
     depends_on:
@@ -65,11 +71,15 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
+    env_file:
+      .env
   trimming_worker:
     platform: linux/amd64
-    container_name: trimming_worker
+    container_name: transcriptome_trimmer_worker
     build:
       context: .
+      args:
+        - TRANSCRIPTOME_TRIMMING_WORKER_CONCURRENCY=$TRANSCRIPTOME_TRIMMING_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: trimming_worker
     depends_on:
@@ -81,27 +91,16 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
-  genome_download_worker:
-    platform: linux/amd64
-    container_name: genome_download_worker
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: genome_download_worker
-    depends_on:
-      - web
-    volumes:
-      - ./funexpression:/funexpression
-    environment:
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=pass
-    networks:
-      - backend
+    env_file:
+      .env
+  
   aligner_worker:
     platform: linux/amd64
-    container_name: aligner_worker
+    container_name: transcriptome_aligner_worker
     build:
       context: .
+      args:
+        - TRANSCRIPTOME_ALIGNER_WORKER_CONCURRENCY=$TRANSCRIPTOME_ALIGNER_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: aligner_worker
     depends_on:
@@ -113,11 +112,15 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
+    env_file:
+      .env
   counter_worker:
     platform: linux/amd64
-    container_name: counter_worker
+    container_name: transcriptome_counter_worker
     build:
       context: .
+      args:
+        - TRANSCRIPTOME_COUNTER_WORKER_CONCURRENCY=$TRANSCRIPTOME_COUNTER_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: counter_worker
     depends_on:
@@ -129,11 +132,15 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
+    env_file:
+      .env
   diffed_worker:
     platform: linux/amd64
-    container_name: diffed_worker
+    container_name: generate_diferential_expression_worker
     build:
       context: .
+      args:
+        - DIFFED_WORKER_CONCURRENCY=$DIFFED_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: differ_worker
     depends_on:
@@ -147,11 +154,33 @@ services:
       - backend
     env_file:
       .env
-  generate_index_genome_worker:
+  genome_download_worker:
     platform: linux/amd64
-    container_name: generate_index_genome_worker
+    container_name: genome_download_worker
     build:
       context: .
+      args:
+        - GENOME_DOWNLOAD_WORKER_CONCURRENCY=$GENOME_DOWNLOAD_WORKER_CONCURRENCY
+      dockerfile: Dockerfile
+      target: genome_download_worker
+    depends_on:
+      - web
+    volumes:
+      - ./funexpression:/funexpression
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=pass
+    networks:
+      - backend
+    env_file:
+      .env
+  generate_index_genome_worker:
+    platform: linux/amd64
+    container_name: genome_generate_index_worker
+    build:
+      context: .
+      args:
+        - GENOME_INDEX_GENERATOR_WORKER_CONCURRENCY=$GENOME_INDEX_GENERATOR_WORKER_CONCURRENCY
       dockerfile: Dockerfile
       target: generate_index_genome_worker
     depends_on:
@@ -163,16 +192,20 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - backend
+    env_file:
+      .env
   mongo:
     image: mongo
     container_name: mongo-database
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
     ports:
       - "27017:27017"
     networks:
       - backend
+    env_file:
+      .env
 networks:
     backend:
       driver: bridge

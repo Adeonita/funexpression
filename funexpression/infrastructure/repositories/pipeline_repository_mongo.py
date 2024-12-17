@@ -353,3 +353,10 @@ class PipelineRepositoryMongo(PipelineRepositoryPort):
             "p_adj": pipeline.p_adj,
             "log_2_fold_change_threshold": pipeline.log_2_fold_change_threshold,
         }
+
+    def update_status_to_task(self, pipeline_id: str, stage: PipelineStageEnum):
+        pipeline = self.get(pipeline_id)
+        pipeline.stage = stage
+        self.database.updateById(pipeline_id, pipeline.to_json())
+
+        return

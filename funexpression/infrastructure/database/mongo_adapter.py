@@ -1,3 +1,4 @@
+import os
 from bson import ObjectId
 from pymongo import MongoClient
 
@@ -6,7 +7,12 @@ class MongoAdapter:
 
     client = None
 
-    def __init__(self, host="mongo", port=27017, user="root", password="example"):
+    def __init__(self):
+        host = os.getenv("MONGO_HOST")
+        port = os.getenv("MONGO_PORT")
+        user = os.getenv("MONGO_USER")
+        password = os.getenv("MONGO_PASSWORD")
+
         self.client = MongoClient(f"mongodb://{user}:{password}@{host}:{port}/")
 
     def _database_connection(self, database_name="funexpression"):

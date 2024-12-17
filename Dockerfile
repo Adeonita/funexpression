@@ -44,8 +44,11 @@ ENV VIRTUAL_ENV=/app/.venv \
 WORKDIR /funexpression
 
 COPY --from=builder ${SRATOOLKIT} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+ARG TRANSCRIPTOME_DOWNLOAD_WORKER_CONCURRENCY 
+ENV TRANSCRIPTOME_DOWNLOAD_WORKER_CONCURRENCY_VALUE=$TRANSCRIPTOME_DOWNLOAD_WORKER_CONCURRENCY
 
-ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=geo_sra_download", "--concurrency=3"]
+ENTRYPOINT celery -A infrastructure.messaging.task worker -l info --pool=threads --queues=geo_sra_download --concurrency=$TRANSCRIPTOME_DOWNLOAD_WORKER_CONCURRENCY_VALUE
+
 
 # the image is used to run worker for conversion sra to fasta files
 FROM python:3.11-slim-buster AS conversion_worker
@@ -57,8 +60,11 @@ ENV VIRTUAL_ENV=/app/.venv \
 WORKDIR /funexpression
 
 COPY --from=builder ${SRATOOLKIT} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+ARG TRANSCRIPTOME_CONVERSION_WORKER_CONCURRENCY
+ENV TRANSCRIPTOME_CONVERSION_WORKER_CONCURRENCY_VALUE=$TRANSCRIPTOME_CONVERSION_WORKER_CONCURRENCY
 
-ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=sra_to_fasta_conversion", "--concurrency=3"]
+ENTRYPOINT celery -A infrastructure.messaging.task worker -l info --pool=threads --queues=sra_to_fasta_conversion --concurrency=$TRANSCRIPTOME_CONVERSION_WORKER_CONCURRENCY_VALUE
+
 
 #the image is used to run worker for trimming fasta files
 FROM python:3.11-slim-buster AS trimming_worker
@@ -79,7 +85,10 @@ WORKDIR /funexpression
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=trimming_transcriptome", "--concurrency=3"]
+ARG TRANSCRIPTOME_TRIMMING_WORKER_CONCURRENCY 
+ENV TRANSCRIPTOME_TRIMMING_WORKER_CONCURRENCY_VALUE=$TRANSCRIPTOME_TRIMMING_WORKER_CONCURRENCY
+
+ENTRYPOINT celery -A infrastructure.messaging.task worker -l info --pool=threads --queues=trimming_transcriptome --concurrency=$TRANSCRIPTOME_TRIMMING_WORKER_CONCURRENCY_VALUE
 
 
 # the image is used to run worker for downloading genome files
@@ -92,7 +101,6 @@ RUN wget https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/v2/linux-amd64/d
 RUN mv datasets /usr/local/bin
 RUN chmod +x /usr/local/bin/datasets
 
-
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:/app:$PATH"
 
@@ -100,7 +108,11 @@ WORKDIR /funexpression
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=genbank_ncbi_download", "--concurrency=3"]
+ARG GENOME_DOWNLOAD_WORKER_CONCURRENCY
+ENV GENOME_DOWNLOAD_WORKER_CONCURRENCY_VALUE=$GENOME_DOWNLOAD_WORKER_CONCURRENCY
+
+ENTRYPOINT celery -A infrastructure.messaging.task worker -l info --pool=threads --queues=genbank_ncbi_download --concurrency=$GENOME_DOWNLOAD_WORKER_CONCURRENCY_VALUE
+
 
 # the image is used to run worker for aligner transcriptomes
 FROM python:3.11-slim-buster as aligner_worker
@@ -135,7 +147,11 @@ WORKDIR /funexpression
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=aligner_transcriptome", "--concurrency=2"]
+ARG TRANSCRIPTOME_ALIGNER_WORKER_CONCURRENCY
+ENV TRANSCRIPTOME_ALIGNER_WORKER_CONCURRENCY_VALUE=$TRANSCRIPTOME_ALIGNER_WORKER_CONCURRENCY
+
+ENTRYPOINT celery -A infrastructure.messaging.task worker -l info --pool=threads --queues=aligner_transcriptome --concurrency=$TRANSCRIPTOME_ALIGNER_WORKER_CONCURRENCY_VALUE
+
 
 # the image is used to run worker for count transcriptomes
 FROM python:3.11-slim-buster as counter_worker
@@ -147,12 +163,13 @@ WORKDIR /funexpression
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
+ARG TRANSCRIPTOME_COUNTER_WORKER_CONCURRENCY
+ENV TRANSCRIPTOME_COUNTER_WORKER_CONCURRENCY_VALUE=$TRANSCRIPTOME_COUNTER_WORKER_CONCURRENCY
 
-ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=counter_transcriptome", "--concurrency=3"]
+ENTRYPOINT celery -A infrastructure.messaging.task worker -l info --pool=threads --queues=counter_transcriptome --concurrency=$TRANSCRIPTOME_COUNTER_WORKER_CONCURRENCY_VALUE
 
 
-
-# the image is used to run worker for aligner transcriptomes
+# the image is used to run worker for generate genome index
 FROM python:3.11-slim-buster as generate_index_genome_worker
 
 # dependencies
@@ -185,8 +202,12 @@ WORKDIR /funexpression
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=generate_index_genome", "--concurrency=3"]
+ARG GENOME_INDEX_GENERATOR_WORKER_CONCURRENCY
+ENV GENOME_INDEX_GENERATOR_WORKER_CONCURRENCY_VALUE=$GENOME_INDEX_GENERATOR_WORKER_CONCURRENCY
+ENTRYPOINT celery -A infrastructure.messaging.task worker -l info --pool=threads --queues=generate_index_genome --concurrency=$GENOME_INDEX_GENERATOR_WORKER_CONCURRENCY_VALUE
 
+
+# the image is used to run worker for generate differential expression
 FROM python:3.11-slim-buster as differ_worker
 
 ENV VIRTUAL_ENV=/app/.venv \
@@ -194,6 +215,9 @@ ENV VIRTUAL_ENV=/app/.venv \
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
+ARG DIFFED_WORKER_CONCURRENCY
+ENV DIFFED_WORKER_CONCURRENCY_VALUE=$DIFFED_WORKER_CONCURRENCY
+
 WORKDIR /funexpression
 
-ENTRYPOINT ["celery", "-A", "infrastructure.messaging.task", "worker", "-l", "info", "--pool=threads", "--queues=generate_diferential_expression", "--concurrency=3"]
+ENTRYPOINT celery -A infrastructure.messaging.task worker -l info --pool=threads --queues=generate_diferential_expression --concurrency=$DIFFED_WORKER_CONCURRENCY_VALUE
