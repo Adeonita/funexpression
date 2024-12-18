@@ -1,4 +1,5 @@
 import os
+import shutil
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from domain.entities.triplicate import OrganinsGroupEnum
 from ports.infrastructure.storage.storage_path_port import (
@@ -145,5 +146,33 @@ class StoragePathsAdapter(StoragePathsPort):
 
             if not os.path.exists(diretory):
                 os.makedirs(diretory)
+
+        return None
+
+    def remove_trash(self, pipeline_id: str):
+        pipeline_path = f"/funexpression/pipelines/{pipeline_id}"
+
+        print(f"Removing trash from pipeline {pipeline_id}")
+
+        if not os.path.exists(pipeline_path):
+            print(f"The folder '{pipeline_path}' does not exist")
+            return
+
+        for root, dirs, files in os.walk(pipeline_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                try:
+                    os.remove(file_path)
+                    print(f"The file was removed: {file_path}")
+                except Exception as e:
+                    print(f"Ocurred an error when try remove file {file_path}: {e}")
+
+        try:
+            shutil.rmtree(pipeline_path)
+            print(f"Folder was removed: {pipeline_path}")
+        except Exception as e:
+            print(f"Ocurred an error when try remove folder {pipeline_path}: {e}")
+
+        print(f"All files and sub folders inner '{pipeline_path}' was removed.")
 
         return None

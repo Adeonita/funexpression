@@ -49,3 +49,6 @@ class StoragePathsPort(Protocol):
 
     def get_diffed_file_paths(self):
         pass
+
+    def remove_trash(self, pipeline_id: str):
+        pass
