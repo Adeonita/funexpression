@@ -52,3 +52,12 @@ class StoragePathsPort(Protocol):
 
     def remove_trash(self, pipeline_id: str):
         pass
+
+    def remove_temp_sra_files(srr_acession_number: str):
+        pass
+
+    def remove_temp_genome_files(genome_reference_acession_number: str):
+        pass
+
+    def remove_temp_genome_index_files(genome_reference_acession_number: str):
+        pass

@@ -35,3 +35,5 @@ class GenomeIndexGenerateUseCase(BaseUseCase):
             file_status=GenomeStatusEnum.GENERATED,
             file=GenomeFilesEnum.INDEX,
         )
+
+        self.storage_paths.remove_temp_genome_files(input.genome_id)

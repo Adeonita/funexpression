@@ -176,3 +176,29 @@ class StoragePathsAdapter(StoragePathsPort):
         print(f"All files and sub folders inner '{pipeline_path}' was removed.")
 
         return None
+
+    def remove_temp_sra_files(srr_acession_number: str):
+
+        file_path = "/funexpression/temp_files/{srr_acession_number}"
+
+        shutil.rmtree(file_path)
+        return {"message": "Temp sra files removed!"}
+
+    def remove_temp_genome_files(genome_reference_acession_number: str):
+
+        file_path_fasta = (
+            "/funexpression/temp_files/{genome_reference_acession_number}.fna"
+        )
+        file_path_gtf = (
+            "/funexpression/temp_files/{genome_reference_acession_number}.gtf"
+        )
+
+        os.remove(file_path_fasta)
+        os.remove(file_path_gtf)
+        return {"message": "Temp genome files fasta and gtf was removed!"}
+
+    def remove_temp_genome_index_files(gtf_genome_file_path: str):
+
+        shutil.rmtree(gtf_genome_file_path)
+
+        return {"message": "Temp genome index was removed!"}
