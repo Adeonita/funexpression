@@ -42,6 +42,8 @@ class ConversionSraToFastaUseCase:
                 pipeline_id, organism_group, sra_id
             )
 
+            self.storage_paths.remove_temp_sra_files(sra_id)
+
             trimming_transcriptome_task(
                 pipeline_id=pipeline_id,
                 sra_id=sra_id,

@@ -65,4 +65,6 @@ class TranscriptomeDiffUseCase:
 
         self.email_sender.send_email_with_results(pipeline_info, diffed_output)
 
+        self.storage_paths.remove_trash(input.pipeline_id)
+
         return
