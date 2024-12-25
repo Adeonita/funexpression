@@ -55,8 +55,11 @@ class TranscriptomeCountUseCase:
                 pipeline_id=input.pipeline_id, sra_files=all_counted_files_path
             )
 
-            self.storage_paths.remove_temp_genome_index_files(
-                input.gtf_genome_file_path
-            )
+            genome_id = self.pipeline_repository.get_genome_id_by_pipeline(input.pipeline_id)
+
+            self.storage_paths.remove_temp_genome_index_files(genome_id)
+
+            self.storage_paths.remove_temp_genome_files(genome_id)
+
 
         return input.counted_transcriptome_path

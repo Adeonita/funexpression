@@ -36,4 +36,3 @@ class GenomeIndexGenerateUseCase(BaseUseCase):
             file=GenomeFilesEnum.INDEX,
         )
 
-        self.storage_paths.remove_temp_genome_files(input.genome_id)
