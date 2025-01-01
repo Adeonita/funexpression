@@ -35,3 +35,4 @@ class GenomeIndexGenerateUseCase(BaseUseCase):
             file_status=GenomeStatusEnum.GENERATED,
             file=GenomeFilesEnum.INDEX,
         )
+

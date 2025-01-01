@@ -49,3 +49,15 @@ class StoragePathsPort(Protocol):
 
     def get_diffed_file_paths(self):
         pass
+
+    def remove_trash(self, pipeline_id: str):
+        pass
+
+    def remove_temp_sra_files(self, srr_acession_number: str):
+        pass
+
+    def remove_temp_genome_files(self, genome_reference_acession_number: str):
+        pass
+
+    def remove_temp_genome_index_files(self, genome_reference_acession_number: str):
+        pass

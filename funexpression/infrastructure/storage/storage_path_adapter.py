@@ -1,4 +1,5 @@
 import os
+import shutil
 from domain.entities.pipeline_stage_enum import PipelineStageEnum
 from domain.entities.triplicate import OrganinsGroupEnum
 from ports.infrastructure.storage.storage_path_port import (
@@ -147,3 +148,58 @@ class StoragePathsAdapter(StoragePathsPort):
                 os.makedirs(diretory)
 
         return None
+
+    def remove_trash(self, pipeline_id: str):
+        pipeline_path = f"/funexpression/pipelines/{pipeline_id}"
+
+        print(f"Removing trash from pipeline {pipeline_id}")
+
+        if not os.path.exists(pipeline_path):
+            print(f"The folder '{pipeline_path}' does not exist")
+            return
+
+        for root, dirs, files in os.walk(pipeline_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                try:
+                    os.remove(file_path)
+                    print(f"The file was removed: {file_path}")
+                except Exception as e:
+                    print(f"Ocurred an error when try remove file {file_path}: {e}")
+
+        try:
+            shutil.rmtree(pipeline_path)
+            print(f"Folder was removed: {pipeline_path}")
+        except Exception as e:
+            print(f"Ocurred an error when try remove folder {pipeline_path}: {e}")
+
+        print(f"All files and sub folders inner '{pipeline_path}' was removed.")
+
+        return None
+
+    def remove_temp_sra_files(self, srr_acession_number: str):
+
+        file_path = f"/funexpression/temp_files/{srr_acession_number}"
+
+        shutil.rmtree(file_path)
+        return {"message": "Temp sra files removed!"}
+
+    def remove_temp_genome_files(self, genome_reference_acession_number: str):
+
+        file_path_fasta = (
+            f"/funexpression/temp_files/{genome_reference_acession_number}.fna"
+        )
+        file_path_gtf = (
+            f"/funexpression/temp_files/{genome_reference_acession_number}.gtf"
+        )
+
+        os.remove(file_path_fasta)
+        os.remove(file_path_gtf)
+        return {"message": "Temp genome files fasta and gtf was removed!"}
+
+    def remove_temp_genome_index_files(self, genome_reference_acession_number: str):
+
+        gtf_genome_index_path =  f"/funexpression/temp_files/{genome_reference_acession_number}_index"
+        shutil.rmtree(gtf_genome_index_path)
+
+        return {"message": "Temp genome index was removed!"}
